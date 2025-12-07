@@ -2,8 +2,12 @@
 
 > **Unified interface for multiple secret management backends**
 
+[![Blackwell Systems™](https://raw.githubusercontent.com/blackwell-systems/blackwell-docs-theme/main/badge-trademark.svg)](https://github.com/blackwell-systems)
 [![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://go.dev/)
+[![Version](https://img.shields.io/github/v/release/blackwell-systems/vaultmux)](https://github.com/blackwell-systems/vaultmux/releases)
+[![CI](https://github.com/blackwell-systems/vaultmux/workflows/CI/badge.svg)](https://github.com/blackwell-systems/vaultmux/actions)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/Sponsor-Buy%20Me%20a%20Coffee-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/blackwellsystems)
 
 Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. Write your code once and support Bitwarden, 1Password, and pass (the standard Unix password manager) with the same API.
 
