@@ -1,0 +1,177 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Run tests
+        run: go test -v -race ./...
+
+      - name: Run lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+
+      - name: Verify build
+        run: go build -v ./...
+
+  create-release:
+    name: Create GitHub Release
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Get version from tag
+        id: version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "VERSION_NUMBER=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            # First release - get all commits
+            CHANGELOG=$(git log --pretty=format:"* %s (%h)" --no-merges)
+          else
+            # Get commits since previous tag
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"* %s (%h)" --no-merges)
+          fi
+
+          # Write to file to preserve formatting
+          echo "$CHANGELOG" > CHANGELOG.txt
+
+          # Also create a summary
+          COMMIT_COUNT=$(echo "$CHANGELOG" | wc -l)
+          echo "COMMIT_COUNT=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Generate coverage report
+        run: |
+          go test -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out | tail -1 | awk '{print $3}' > coverage.txt
+
+      - name: Read coverage
+        id: coverage
+        run: |
+          COVERAGE=$(cat coverage.txt)
+          echo "COVERAGE=$COVERAGE" >> $GITHUB_OUTPUT
+
+      - name: Create release notes
+        run: |
+          cat > RELEASE_NOTES.md <<EOF
+          # Vaultmux ${{ steps.version.outputs.VERSION }}
+
+          > Unified interface for multiple secret management backends
+
+          ## 📦 Installation
+
+          \`\`\`bash
+          go get github.com/blackwell-systems/vaultmux@${{ steps.version.outputs.VERSION }}
+          \`\`\`
+
+          ## 📊 Stats
+
+          - **Test Coverage:** ${{ steps.coverage.outputs.COVERAGE }}
+          - **Go Version:** 1.21+
+          - **Commits:** ${{ steps.changelog.outputs.COMMIT_COUNT }}
+          - **Platforms:** Linux, macOS, Windows
+
+          ## 🎯 Supported Backends
+
+          - ✅ **Bitwarden** - \`bw\` CLI integration
+          - ✅ **1Password** - \`op\` CLI integration
+          - ✅ **pass** - Unix password manager
+
+          ## 📝 Changes
+
+          $(cat CHANGELOG.txt)
+
+          ## 📚 Documentation
+
+          - [README](https://github.com/blackwell-systems/vaultmux#readme)
+          - [Architecture](https://github.com/blackwell-systems/vaultmux/blob/main/ARCHITECTURE.md)
+          - [GoDoc](https://pkg.go.dev/github.com/blackwell-systems/vaultmux@${{ steps.version.outputs.VERSION }})
+
+          ## ⚡ Quick Start
+
+          \`\`\`go
+          package main
+
+          import (
+              "context"
+              "github.com/blackwell-systems/vaultmux"
+              _ "github.com/blackwell-systems/vaultmux/backends/pass"
+          )
+
+          func main() {
+              backend, _ := vaultmux.New(vaultmux.Config{
+                  Backend: vaultmux.BackendPass,
+                  Prefix:  "myapp",
+              })
+
+              backend.Init(context.Background())
+              session, _ := backend.Authenticate(context.Background())
+
+              // Use the backend...
+          }
+          \`\`\`
+
+          ---
+
+          **Full Changelog**: https://github.com/blackwell-systems/vaultmux/compare/${{ steps.version.outputs.VERSION }}
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          generate_release_notes: false
+          files: |
+            LICENSE
+            README.md
+            ARCHITECTURE.md
+
+  update-pkg-go-dev:
+    name: Update pkg.go.dev
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger pkg.go.dev update
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          curl -sSf "https://proxy.golang.org/github.com/blackwell-systems/vaultmux/@v/${VERSION}.info" || true
+          curl -sSf "https://sum.golang.org/lookup/github.com/blackwell-systems/vaultmux@${VERSION}" || true
