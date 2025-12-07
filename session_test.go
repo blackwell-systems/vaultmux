@@ -265,6 +265,21 @@ func TestAutoRefreshSession(t *testing.T) {
 		}
 	})
 
+	t.Run("refresh success", func(t *testing.T) {
+		inner := &mockTestSession{
+			token:      "old-token",
+			valid:      false,
+			refreshErr: nil,
+		}
+		session := NewAutoRefreshSession(inner, backend)
+
+		// Call Refresh directly
+		err := session.Refresh(context.Background())
+		if err != nil {
+			t.Errorf("Refresh() error = %v, want nil", err)
+		}
+	})
+
 	t.Run("delegates IsValid", func(t *testing.T) {
 		inner := &mockTestSession{
 			token: "test-token",
@@ -289,5 +304,60 @@ func TestAutoRefreshSession(t *testing.T) {
 		if !session.ExpiresAt().Equal(expires) {
 			t.Errorf("ExpiresAt() = %v, want %v", session.ExpiresAt(), expires)
 		}
+	})
+}
+
+func TestSessionCache_ErrorPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	t.Run("Save with invalid directory", func(t *testing.T) {
+		// Create a file where we want a directory
+		invalidPath := filepath.Join(tmpDir, "file-not-dir")
+		_ = os.WriteFile(invalidPath, []byte("test"), 0600)
+
+		cache := NewSessionCache(filepath.Join(invalidPath, "subdir", ".session"), 30*time.Minute)
+		err := cache.Save("token", "backend")
+
+		// Should get an error since we can't create the directory
+		if err == nil {
+			t.Error("Save() error = nil, want error for invalid directory path")
+		}
+	})
+
+	t.Run("Load with read error", func(t *testing.T) {
+		// Create a directory where we expect a file
+		dirPath := filepath.Join(tmpDir, "dir-not-file")
+		_ = os.Mkdir(dirPath, 0755)
+
+		cache := NewSessionCache(dirPath, 30*time.Minute)
+		session, err := cache.Load()
+
+		// Should get an error trying to read a directory
+		if err == nil {
+			t.Error("Load() error = nil, want error when path is directory")
+		}
+		if session != nil {
+			t.Error("Load() returned non-nil session on error")
+		}
+	})
+
+	t.Run("Clear with permission error", func(t *testing.T) {
+		sessionFile := filepath.Join(tmpDir, ".test-session-readonly")
+		cache := NewSessionCache(sessionFile, 30*time.Minute)
+
+		// Create a session
+		_ = cache.Save("test-token", "test-backend")
+
+		// Make it read-only (may not work on all systems)
+		_ = os.Chmod(filepath.Dir(sessionFile), 0555)
+
+		// Try to clear (may fail on some systems)
+		err := cache.Clear()
+
+		// Restore permissions
+		_ = os.Chmod(filepath.Dir(sessionFile), 0755)
+
+		// We can't reliably test permission errors across platforms
+		_ = err
 	})
 }

@@ -313,3 +313,71 @@ func TestMockSession(t *testing.T) {
 		t.Error("ExpiresAt() is not zero, want zero time")
 	}
 }
+
+func TestMockBackend_CloseAndAuth(t *testing.T) {
+	ctx := context.Background()
+	backend := New()
+
+	// Test Close
+	if err := backend.Close(); err != nil {
+		t.Errorf("Close() error = %v, want nil", err)
+	}
+
+	// Test IsAuthenticated
+	backend.AuthError = nil
+	if !backend.IsAuthenticated(ctx) {
+		t.Error("IsAuthenticated() = false, want true when AuthError is nil")
+	}
+
+	backend.AuthError = errors.New("not authenticated")
+	if backend.IsAuthenticated(ctx) {
+		t.Error("IsAuthenticated() = true, want false when AuthError is set")
+	}
+}
+
+func TestMockBackend_ErrorPaths(t *testing.T) {
+	ctx := context.Background()
+	backend := New()
+	session, _ := backend.Authenticate(ctx)
+
+	t.Run("GetNotes with GetError", func(t *testing.T) {
+		backend.GetError = errors.New("get error")
+		_, err := backend.GetNotes(ctx, "test", session)
+		if err == nil {
+			t.Error("GetNotes() error = nil, want error")
+		}
+		backend.GetError = nil
+	})
+
+	t.Run("GetNotes not found", func(t *testing.T) {
+		notes, err := backend.GetNotes(ctx, "nonexistent", session)
+		if !errors.Is(err, vaultmux.ErrNotFound) {
+			t.Errorf("GetNotes() error = %v, want ErrNotFound", err)
+		}
+		if notes != "" {
+			t.Errorf("GetNotes() = %q, want empty string", notes)
+		}
+	})
+
+	t.Run("UpdateItem not found", func(t *testing.T) {
+		err := backend.UpdateItem(ctx, "nonexistent", "value", session)
+		if !errors.Is(err, vaultmux.ErrNotFound) {
+			t.Errorf("UpdateItem() error = %v, want ErrNotFound", err)
+		}
+	})
+
+	t.Run("DeleteItem not found", func(t *testing.T) {
+		err := backend.DeleteItem(ctx, "nonexistent", session)
+		if !errors.Is(err, vaultmux.ErrNotFound) {
+			t.Errorf("DeleteItem() error = %v, want ErrNotFound", err)
+		}
+	})
+
+	t.Run("CreateLocation already exists", func(t *testing.T) {
+		backend.CreateLocation(ctx, "existing", session)
+		err := backend.CreateLocation(ctx, "existing", session)
+		if !errors.Is(err, vaultmux.ErrAlreadyExists) {
+			t.Errorf("CreateLocation() error = %v, want ErrAlreadyExists", err)
+		}
+	})
+}
