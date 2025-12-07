@@ -29,7 +29,19 @@ issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-rules:
+    # Exclude unused parameter warnings in interface implementations
+    - linters:
+        - revive
+      text: "unused-parameter"
 
 run:
   timeout: 5m
   tests: true
+
+severity:
+  default-severity: error
+  rules:
+    - linters:
+        - revive
+      severity: warning
