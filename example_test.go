@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"github.com/blackwell-systems/vaultmux"
-	_ "github.com/blackwell-systems/vaultmux/backends/bitwarden" // Register backend
+	_ "github.com/blackwell-systems/vaultmux/backends/bitwarden"   // Register backend
 	_ "github.com/blackwell-systems/vaultmux/backends/onepassword" // Register backend
-	_ "github.com/blackwell-systems/vaultmux/backends/pass" // Register backend
+	_ "github.com/blackwell-systems/vaultmux/backends/pass"        // Register backend
 	"github.com/blackwell-systems/vaultmux/mock"
 )
 
@@ -18,7 +18,7 @@ func Example() {
 
 	// Create a mock backend for testing
 	backend := mock.New()
-	defer backend.Close()
+	defer func() { _ = backend.Close() }()
 
 	// Initialize
 	if err := backend.Init(ctx); err != nil {
@@ -59,7 +59,7 @@ func ExampleConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer backend.Close()
+	defer func() { _ = backend.Close() }()
 
 	fmt.Println(backend.Name())
 	// Output: pass
@@ -163,8 +163,7 @@ func Example_locations() {
 	session, _ := backend.Authenticate(ctx)
 
 	// Create a location
-	err := backend.CreateLocation(ctx, "work", session)
-	if err != nil {
+	if err := backend.CreateLocation(ctx, "work", session); err != nil {
 		log.Fatal(err)
 	}
 

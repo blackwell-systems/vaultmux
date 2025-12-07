@@ -225,8 +225,8 @@ func TestMockBackend_Locations(t *testing.T) {
 	})
 
 	t.Run("list locations", func(t *testing.T) {
-		backend.CreateLocation(ctx, "folder1", session)
-		backend.CreateLocation(ctx, "folder2", session)
+		_ = backend.CreateLocation(ctx, "folder1", session)
+		_ = backend.CreateLocation(ctx, "folder2", session)
 
 		locations, err := backend.ListLocations(ctx, session)
 		if err != nil {
@@ -277,7 +277,7 @@ func TestMockBackend_Clear(t *testing.T) {
 	backend := New()
 	backend.SetItem("item1", "value1")
 	backend.SetItem("item2", "value2")
-	backend.CreateLocation(context.Background(), "folder", nil)
+	_ = backend.CreateLocation(context.Background(), "folder", nil)
 
 	backend.Clear()
 

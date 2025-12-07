@@ -94,10 +94,15 @@ type Item struct {
 type ItemType int
 
 const (
+	// ItemTypeSecureNote represents a secure note item.
 	ItemTypeSecureNote ItemType = iota
+	// ItemTypeLogin represents a login credential item.
 	ItemTypeLogin
+	// ItemTypeSSHKey represents an SSH key item.
 	ItemTypeSSHKey
+	// ItemTypeIdentity represents an identity item.
 	ItemTypeIdentity
+	// ItemTypeCard represents a credit card item.
 	ItemTypeCard
 )
 

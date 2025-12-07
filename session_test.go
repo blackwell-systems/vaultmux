@@ -62,7 +62,7 @@ func TestSessionCache_SaveLoad(t *testing.T) {
 		cache := NewSessionCache(expiredFile, 1*time.Nanosecond)
 
 		// Save and wait for expiry
-		cache.Save("expired-token", "test")
+		_ = cache.Save("expired-token", "test")
 		time.Sleep(10 * time.Millisecond)
 
 		session, err := cache.Load()
@@ -86,7 +86,7 @@ func TestSessionCache_Clear(t *testing.T) {
 	cache := NewSessionCache(sessionFile, 30*time.Minute)
 
 	// Create a session
-	cache.Save("test-token", "test-backend")
+	_ = cache.Save("test-token", "test-backend")
 
 	// Clear it
 	err := cache.Clear()
@@ -191,23 +191,47 @@ func (s *mockTestSession) ExpiresAt() time.Time              { return s.expires 
 // Mock backend for testing AutoRefreshSession
 type mockTestBackend struct{}
 
-func (b *mockTestBackend) Name() string                                     { return "mock" }
-func (b *mockTestBackend) Init(ctx context.Context) error                   { return nil }
-func (b *mockTestBackend) Close() error                                     { return nil }
-func (b *mockTestBackend) IsAuthenticated(ctx context.Context) bool         { return true }
-func (b *mockTestBackend) Authenticate(ctx context.Context) (Session, error) { return &mockTestSession{token: "new-token", valid: true}, nil }
-func (b *mockTestBackend) Sync(ctx context.Context, session Session) error  { return nil }
-func (b *mockTestBackend) GetItem(ctx context.Context, name string, session Session) (*Item, error) { return nil, nil }
-func (b *mockTestBackend) GetNotes(ctx context.Context, name string, session Session) (string, error) { return "", nil }
-func (b *mockTestBackend) ItemExists(ctx context.Context, name string, session Session) (bool, error) { return false, nil }
-func (b *mockTestBackend) ListItems(ctx context.Context, session Session) ([]*Item, error) { return nil, nil }
-func (b *mockTestBackend) CreateItem(ctx context.Context, name, content string, session Session) error { return nil }
-func (b *mockTestBackend) UpdateItem(ctx context.Context, name, content string, session Session) error { return nil }
-func (b *mockTestBackend) DeleteItem(ctx context.Context, name string, session Session) error { return nil }
-func (b *mockTestBackend) ListLocations(ctx context.Context, session Session) ([]string, error) { return nil, nil }
-func (b *mockTestBackend) LocationExists(ctx context.Context, name string, session Session) (bool, error) { return false, nil }
-func (b *mockTestBackend) CreateLocation(ctx context.Context, name string, session Session) error { return nil }
-func (b *mockTestBackend) ListItemsInLocation(ctx context.Context, locType, locValue string, session Session) ([]*Item, error) { return nil, nil }
+func (b *mockTestBackend) Name() string                             { return "mock" }
+func (b *mockTestBackend) Init(ctx context.Context) error           { return nil }
+func (b *mockTestBackend) Close() error                             { return nil }
+func (b *mockTestBackend) IsAuthenticated(ctx context.Context) bool { return true }
+func (b *mockTestBackend) Authenticate(ctx context.Context) (Session, error) {
+	return &mockTestSession{token: "new-token", valid: true}, nil
+}
+func (b *mockTestBackend) Sync(ctx context.Context, session Session) error { return nil }
+func (b *mockTestBackend) GetItem(ctx context.Context, name string, session Session) (*Item, error) {
+	return nil, nil
+}
+func (b *mockTestBackend) GetNotes(ctx context.Context, name string, session Session) (string, error) {
+	return "", nil
+}
+func (b *mockTestBackend) ItemExists(ctx context.Context, name string, session Session) (bool, error) {
+	return false, nil
+}
+func (b *mockTestBackend) ListItems(ctx context.Context, session Session) ([]*Item, error) {
+	return nil, nil
+}
+func (b *mockTestBackend) CreateItem(ctx context.Context, name, content string, session Session) error {
+	return nil
+}
+func (b *mockTestBackend) UpdateItem(ctx context.Context, name, content string, session Session) error {
+	return nil
+}
+func (b *mockTestBackend) DeleteItem(ctx context.Context, name string, session Session) error {
+	return nil
+}
+func (b *mockTestBackend) ListLocations(ctx context.Context, session Session) ([]string, error) {
+	return nil, nil
+}
+func (b *mockTestBackend) LocationExists(ctx context.Context, name string, session Session) (bool, error) {
+	return false, nil
+}
+func (b *mockTestBackend) CreateLocation(ctx context.Context, name string, session Session) error {
+	return nil
+}
+func (b *mockTestBackend) ListItemsInLocation(ctx context.Context, locType, locValue string, session Session) ([]*Item, error) {
+	return nil, nil
+}
 
 func TestAutoRefreshSession(t *testing.T) {
 	backend := &mockTestBackend{}

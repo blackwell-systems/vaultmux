@@ -9,9 +9,12 @@ import (
 type BackendType string
 
 const (
-	BackendBitwarden   BackendType = "bitwarden"
+	// BackendBitwarden represents the Bitwarden backend.
+	BackendBitwarden BackendType = "bitwarden"
+	// BackendOnePassword represents the 1Password backend.
 	BackendOnePassword BackendType = "1password"
-	BackendPass        BackendType = "pass"
+	// BackendPass represents the pass (Unix password manager) backend.
+	BackendPass BackendType = "pass"
 )
 
 // Config holds vault configuration.
