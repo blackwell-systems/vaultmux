@@ -27,7 +27,7 @@ type CachedSession struct {
 func NewSessionCache(path string, ttl time.Duration) *SessionCache {
 	// Ensure parent directory exists
 	dir := filepath.Dir(path)
-	os.MkdirAll(dir, 0755)
+	_ = os.MkdirAll(dir, 0755)
 
 	return &SessionCache{
 		path: path,
@@ -48,13 +48,13 @@ func (c *SessionCache) Load() (*CachedSession, error) {
 	var session CachedSession
 	if err := json.Unmarshal(data, &session); err != nil {
 		// Invalid cache - remove it
-		os.Remove(c.path)
+		_ = os.Remove(c.path)
 		return nil, nil
 	}
 
 	// Check if expired
 	if time.Now().After(session.Expires) {
-		os.Remove(c.path)
+		_ = os.Remove(c.path)
 		return nil, nil
 	}
 

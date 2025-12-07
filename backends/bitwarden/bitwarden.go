@@ -140,10 +140,16 @@ func (b *Backend) GetItem(ctx context.Context, name string, session vaultmux.Ses
 		return nil, vaultmux.WrapError("bitwarden", "parse", name, err)
 	}
 
+	// Map Bitwarden type to vaultmux ItemType
+	itemType := vaultmux.ItemTypeSecureNote
+	if bwItem.Type >= 0 && bwItem.Type <= 4 {
+		itemType = vaultmux.ItemType(bwItem.Type)
+	}
+
 	return &vaultmux.Item{
 		ID:       bwItem.ID,
 		Name:     bwItem.Name,
-		Type:     vaultmux.ItemType(bwItem.Type),
+		Type:     itemType,
 		Notes:    bwItem.Notes,
 		Location: bwItem.FolderID,
 		Created:  bwItem.Created,
@@ -196,10 +202,14 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 
 	items := make([]*vaultmux.Item, len(bwItems))
 	for i, bwItem := range bwItems {
+		itemType := vaultmux.ItemTypeSecureNote
+		if bwItem.Type >= 0 && bwItem.Type <= 4 {
+			itemType = vaultmux.ItemType(bwItem.Type)
+		}
 		items[i] = &vaultmux.Item{
 			ID:    bwItem.ID,
 			Name:  bwItem.Name,
-			Type:  vaultmux.ItemType(bwItem.Type),
+			Type:  itemType,
 			Notes: bwItem.Notes,
 		}
 	}
