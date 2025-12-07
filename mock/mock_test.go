@@ -374,7 +374,7 @@ func TestMockBackend_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("CreateLocation already exists", func(t *testing.T) {
-		backend.CreateLocation(ctx, "existing", session)
+		_ = backend.CreateLocation(ctx, "existing", session)
 		err := backend.CreateLocation(ctx, "existing", session)
 		if !errors.Is(err, vaultmux.ErrAlreadyExists) {
 			t.Errorf("CreateLocation() error = %v, want ErrAlreadyExists", err)
