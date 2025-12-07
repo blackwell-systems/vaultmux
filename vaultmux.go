@@ -1,0 +1,144 @@
+// Package vaultmux provides a unified interface for interacting with multiple
+// secret management backends including Bitwarden, 1Password, and pass.
+//
+// Basic usage:
+//
+//	import (
+//	    "github.com/blackwell-systems/vaultmux"
+//	    _ "github.com/blackwell-systems/vaultmux/backends/pass"
+//	)
+//
+//	backend, err := vaultmux.New(vaultmux.Config{
+//	    Backend: vaultmux.BackendPass,
+//	    Prefix:  "myapp",
+//	})
+//
+// See the package documentation for more examples.
+package vaultmux // import "github.com/blackwell-systems/vaultmux"
+
+import (
+	"context"
+	"errors"
+	"time"
+)
+
+// Backend represents a secret storage backend.
+// Implementations: Bitwarden, 1Password, pass
+type Backend interface {
+	// Metadata
+	Name() string
+
+	// Lifecycle
+	Init(ctx context.Context) error
+	Close() error
+
+	// Authentication
+	IsAuthenticated(ctx context.Context) bool
+	Authenticate(ctx context.Context) (Session, error)
+
+	// Sync pulls latest from server (no-op for pass)
+	Sync(ctx context.Context, session Session) error
+
+	// Item operations (CRUD)
+	GetItem(ctx context.Context, name string, session Session) (*Item, error)
+	GetNotes(ctx context.Context, name string, session Session) (string, error)
+	ItemExists(ctx context.Context, name string, session Session) (bool, error)
+	ListItems(ctx context.Context, session Session) ([]*Item, error)
+
+	// Mutations
+	CreateItem(ctx context.Context, name, content string, session Session) error
+	UpdateItem(ctx context.Context, name, content string, session Session) error
+	DeleteItem(ctx context.Context, name string, session Session) error
+
+	// Location management (folders/vaults)
+	LocationManager
+}
+
+// Session represents an authenticated session.
+// Opaque to callers - backend-specific internals.
+type Session interface {
+	// Token returns the session token (empty for pass).
+	Token() string
+
+	// IsValid checks if the session is still valid.
+	IsValid(ctx context.Context) bool
+
+	// Refresh attempts to refresh an expired session.
+	Refresh(ctx context.Context) error
+
+	// ExpiresAt returns when the session expires (zero for non-expiring).
+	ExpiresAt() time.Time
+}
+
+// LocationManager handles organizational units (folders, vaults, etc.)
+type LocationManager interface {
+	ListLocations(ctx context.Context, session Session) ([]string, error)
+	LocationExists(ctx context.Context, name string, session Session) (bool, error)
+	CreateLocation(ctx context.Context, name string, session Session) error
+	ListItemsInLocation(ctx context.Context, locType, locValue string, session Session) ([]*Item, error)
+}
+
+// Item represents a vault item.
+type Item struct {
+	ID       string            `json:"id"`
+	Name     string            `json:"name"`
+	Type     ItemType          `json:"type"`
+	Notes    string            `json:"notes,omitempty"`
+	Fields   map[string]string `json:"fields,omitempty"`
+	Location string            `json:"location,omitempty"` // Folder/vault
+	Created  time.Time         `json:"created,omitempty"`
+	Modified time.Time         `json:"modified,omitempty"`
+}
+
+// ItemType indicates the type of vault item.
+type ItemType int
+
+const (
+	ItemTypeSecureNote ItemType = iota
+	ItemTypeLogin
+	ItemTypeSSHKey
+	ItemTypeIdentity
+	ItemTypeCard
+)
+
+// String returns the string representation of ItemType.
+func (t ItemType) String() string {
+	switch t {
+	case ItemTypeSecureNote:
+		return "SecureNote"
+	case ItemTypeLogin:
+		return "Login"
+	case ItemTypeSSHKey:
+		return "SSHKey"
+	case ItemTypeIdentity:
+		return "Identity"
+	case ItemTypeCard:
+		return "Card"
+	default:
+		return "Unknown"
+	}
+}
+
+// Common errors
+var (
+	// ErrNotFound indicates the item doesn't exist.
+	ErrNotFound = errors.New("item not found")
+
+	// ErrAlreadyExists indicates the item already exists.
+	ErrAlreadyExists = errors.New("item already exists")
+
+	// ErrNotAuthenticated indicates no valid session.
+	ErrNotAuthenticated = errors.New("not authenticated")
+
+	// ErrSessionExpired indicates the session has expired.
+	ErrSessionExpired = errors.New("session expired")
+
+	// ErrBackendNotInstalled indicates the CLI tool is missing.
+	ErrBackendNotInstalled = errors.New("backend CLI not installed")
+
+	// ErrBackendLocked indicates the vault is locked.
+	ErrBackendLocked = errors.New("vault is locked")
+
+	// ErrPermissionDenied indicates insufficient permissions.
+	ErrPermissionDenied = errors.New("permission denied")
+)
