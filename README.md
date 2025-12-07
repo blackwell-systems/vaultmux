@@ -19,7 +19,7 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 - **Context Support** - All operations accept `context.Context` for cancellation/timeout
 - **Session Caching** - Avoid repeated authentication prompts
 - **Type-Safe** - Full static typing with Go interfaces
-- **Testable** - Includes mock backend for unit testing
+- **Testable** - Includes mock backend for unit testing (89%+ core coverage)
 
 ## Supported Backends
 
