@@ -19,7 +19,7 @@ func TestBackendType(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(string(tt.name), func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			// Just verify the constant exists
 			if tt.valid {
 				if tt.backend == "" {

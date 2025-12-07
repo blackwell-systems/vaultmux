@@ -79,7 +79,7 @@ func TestNew_SessionTTLDefault(t *testing.T) {
 		SessionTTL: 0, // Should default to 1800
 	}
 
-	New(cfg)
+	_, _ = New(cfg)
 
 	if capturedConfig.SessionTTL != 1800 {
 		t.Errorf("SessionTTL = %d, want 1800", capturedConfig.SessionTTL)
