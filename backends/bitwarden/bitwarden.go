@@ -83,7 +83,7 @@ func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
 	var status struct {
 		Status string `json:"status"`
 	}
-	json.Unmarshal(out, &status)
+	_ = json.Unmarshal(out, &status)
 
 	if status.Status == "unauthenticated" {
 		return nil, fmt.Errorf("not logged in to Bitwarden - run: bw login")
@@ -102,7 +102,7 @@ func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
 	token := strings.TrimSpace(string(out))
 
 	// Cache the session
-	b.cache.Save(token, "bitwarden")
+	_ = b.cache.Save(token, "bitwarden")
 
 	return &bwSession{token: token, backend: b}, nil
 }
@@ -248,7 +248,7 @@ func (b *Backend) UpdateItem(ctx context.Context, name, content string, session 
 
 	// Update notes field
 	template := map[string]interface{}{
-		"type":  int(item.Type),
+		"type":  item.Type,
 		"name":  item.Name,
 		"notes": content,
 	}

@@ -90,7 +90,7 @@ func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
 	token := strings.TrimSpace(string(out))
 
 	// Cache the session
-	b.cache.Save(token, "1password")
+	_ = b.cache.Save(token, "1password")
 
 	return &opSession{
 		token:   token,
