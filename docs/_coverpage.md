@@ -12,8 +12,6 @@ go get github.com/blackwell-systems/vaultmux
 - **Zero Dependencies** - Only Go stdlib, backends use their CLIs
 - **Type-Safe** - Full Go interfaces with context support
 - **Session Caching** - Avoid repeated authentication prompts
-- **89%+ Coverage** - Comprehensive tests with mock backend
-- **Production Ready** - Used in blackwell-systems/dotfiles
 
 [Get Started](#vaultmux)
 [VIEW ON GITHUB](https://github.com/blackwell-systems/vaultmux)
