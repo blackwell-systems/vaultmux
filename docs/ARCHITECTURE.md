@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. It abstracts away the differences between Bitwarden, 1Password, pass (Unix password manager), Windows Credential Manager, AWS Secrets Manager, and Google Cloud Secret Manager, allowing applications to work with any supported backend through a single API.
+Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. It abstracts away the differences between Bitwarden, 1Password, pass (Unix password manager), Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, and Azure Key Vault, allowing applications to work with any supported backend through a single API.
 
 **Key Features:**
 - Unified `Backend` interface for all secret managers
@@ -638,21 +638,21 @@ func TestMyCode(t *testing.T) {
 
 ### 10.1 Feature Matrix
 
-| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager | GCP Secret Manager |
-|---------|-----------|-----------|------|------------------|---------------------|--------------------|
-| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) | SDK (cloud.google.com/go) |
-| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello | IAM credentials | Service Account / ADC |
-| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM) | Long-lived (SA) |
-| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) | Always synchronized | Always synchronized |
-| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) | No (requires AWS API) | No (requires GCP API) |
-| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) | Prefix + tags | Prefix + labels |
-| **Sharing** | Organizations | Vaults | Git repos | Windows user account | IAM policies | IAM policies |
-| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) | Partial (first 6 versions free) |
-| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) | No (AWS only) | No (GCP only) |
-| **Platform** | All | All | Unix | Windows only | All | All |
-| **Versioning** | No | No | Via git | No | Automatic (built-in) | Automatic (built-in) |
-| **Rotation** | Manual | Manual | Manual | Manual | Automatic (configurable) | Manual (future: automatic) |
-| **Audit Logging** | Self-hosted only | Enterprise only | Via git log | No | Built-in (CloudTrail) | Built-in (Cloud Audit Logs) |
+| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager | GCP Secret Manager | Azure Key Vault |
+|---------|-----------|-----------|------|------------------|---------------------|--------------------|--------------------|
+| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) | SDK (cloud.google.com/go) | SDK (azure-sdk-for-go) |
+| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello | IAM credentials | Service Account / ADC | Azure AD (Managed Identity / Service Principal / CLI) |
+| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM) | Long-lived (SA) | Long-lived (Azure AD) |
+| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) | Always synchronized | Always synchronized | Always synchronized |
+| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) | No (requires AWS API) | No (requires GCP API) | No (requires Azure API) |
+| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) | Prefix + tags | Prefix + labels | Prefix + tags (future) |
+| **Sharing** | Organizations | Vaults | Git repos | Windows user account | IAM policies | IAM policies | Azure RBAC |
+| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) | Partial (first 6 versions free) | Partial (10k ops free/month) |
+| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) | No (AWS only) | No (GCP only) | No (Azure only) |
+| **Platform** | All | All | Unix | Windows only | All | All | All |
+| **Versioning** | No | No | Via git | No | Automatic (built-in) | Automatic (built-in) | Automatic (built-in) |
+| **Rotation** | Manual | Manual | Manual | Manual | Automatic (configurable) | Manual (future: automatic) | Manual (future: automatic) |
+| **Audit Logging** | Self-hosted only | Enterprise only | Via git log | No | Built-in (CloudTrail) | Built-in (Cloud Audit Logs) | Built-in (Azure Monitor) |
 
 ### 10.2 Implementation Differences
 
@@ -696,15 +696,24 @@ graph TB
         GCPVer[Automatic versioning]
     end
 
+    subgraph Azure["Azure Key Vault"]
+        AzureSess[Azure AD<br/>Managed Identity / CLI]
+        AzureSync[Always synchronized]
+        AzureFolder[Prefix + Tags]
+        AzureVer[Automatic versioning]
+        AzureHSM[HSM-backed]
+    end
+
     Backend[Backend Interface] -.->|implements| BW
     Backend -.->|implements| OP
     Backend -.->|implements| P
     Backend -.->|implements| WC
     Backend -.->|implements| AWS
     Backend -.->|implements| GCP
+    Backend -.->|implements| Azure
 
     style Backend fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
-    style BW,OP,P,WC,AWS,GCP fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style BW,OP,P,WC,AWS,GCP,Azure fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
 ### 10.3 When to Use Each Backend
@@ -752,6 +761,19 @@ graph TB
 - Integration with GCP services (Cloud SQL, GKE Workload Identity)
 - Teams already invested in Google Cloud ecosystem
 - Cost-conscious projects (first 6 secret versions free per month)
+
+**Azure Key Vault:**
+- Applications running on Azure (VMs, AKS, App Service, Azure Functions)
+- HSM-backed secret storage requirements (FIPS 140-2 Level 2 validated)
+- Azure AD authentication and RBAC-based access control
+- Enterprise Windows environments with Azure integration
+- Audit logging requirements (Azure Monitor integration)
+- Automatic versioning on every update (built-in)
+- Soft-delete and purge protection for compliance
+- Integration with Azure services (Key Vault references in App Service)
+- Teams already invested in Microsoft Azure ecosystem
+- Multi-region replication for disaster recovery
+- Certificate and key management alongside secrets
 
 ---
 

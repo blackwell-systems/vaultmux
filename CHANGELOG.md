@@ -7,176 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - 2025-12-08
+## [0.3.0] - 2025-12-08
 
 ### Added
 
-- **Google Cloud Secret Manager Backend** - Second SDK-based backend (validates cloud provider universality)
-  - Native Google Cloud Go SDK integration (`cloud.google.com/go/secretmanager/apiv1`)
-  - Application Default Credentials (ADC) support (service account JSON, gcloud CLI, GCE/GKE metadata)
-  - GCP project ID-based session management
+- **Azure Key Vault Backend** - Third SDK-based backend (completes major cloud provider support)
+  - Native Azure SDK for Go integration (`github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets`)
+  - Azure AD authentication via DefaultAzureCredential (Managed Identity, Service Principal, Azure CLI)
+  - HSM-backed secret storage (FIPS 140-2 Level 2 validated)
+  - Azure RBAC integration (Key Vault Secrets Officer role)
   - Secret name prefixing for namespace isolation (`myapp-secret-name`)
-  - Automatic secret versioning on every update (built-in to GCP)
-  - Two-step secret creation (CreateSecret for metadata + AddSecretVersion for content)
-  - gRPC error code mapping (codes.NotFound, codes.AlreadyExists, etc.)
-  - Iterator-based pagination for secret listing
-  - Label-based secret organization (`vaultmux:true`, `prefix:<value>`)
-  - Custom endpoint support for testing (fake-gcp-server compatible)
-  - Immediate deletion (no recovery period like AWS)
-  - Comprehensive error mapping (GCP gRPC errors → vaultmux errors)
+  - Automatic versioning on every update (built-in to Azure)
+  - Soft-delete and purge protection for compliance
+  - Pager-based pagination for secret listing
+  - Azure Monitor audit logging integration
+  - Comprehensive error mapping (Azure ResponseError → vaultmux errors)
   - No session management complexity (credentials are long-lived or SDK-managed)
-- **Real GCP Testing Strategy** - First backend without local emulator
-  - Unit tests with no GCP credentials required (configuration, interface compliance)
-  - Integration tests skip gracefully when GCP_PROJECT_ID not set
-  - Real GCP free tier testing (first 6 secret versions free)
-  - Service account IAM permission documentation
-  - GitHub Actions CI workflow examples with real GCP
-- **GCP Implementation Documentation**
-  - ROADMAP.md: Comprehensive GCP section with testing strategy
-  - ROADMAP.md: API mapping (GetItem → AccessSecretVersion + GetSecret)
-  - ROADMAP.md: IAM permissions templates (secretmanager.admin role)
-  - ROADMAP.md: Cost analysis (~$0.06/secret version after free tier)
-  - ROADMAP.md: Comparison to AWS (simpler API, cleaner SDK, no local emulator)
-
-### Fixed
-
-- **Error Handling Standardization** - Consistent error wrapping across all backends
-  - Added `ErrNotSupported` sentinel error for unsupported operations (location management)
-  - AWS Secrets Manager location methods now return `ErrNotSupported` (previously returned fmt.Errorf)
-  - GCP Secret Manager location methods now return `ErrNotSupported` (previously returned fmt.Errorf)
-  - Windows Credential Manager parse errors now use `vaultmux.WrapError()` (previously used fmt.Errorf)
-  - All location management tests updated to use `errors.Is()` for proper error checking
-  - Enables proper error type checking with `errors.Is(err, vaultmux.ErrNotSupported)`
-- **Error Testing Improvements**
-  - AWS location management tests now properly check for `ErrNotSupported` using `errors.Is()`
-  - GCP location management tests now properly check for `ErrNotSupported` using `errors.Is()`
-  - Added `"errors"` import to GCP test file for error type checking
+- **Azure Testing Strategy** - Third backend without local emulator
+  - Unit tests with no Azure credentials required (configuration, interface compliance)
+  - Integration tests skip gracefully when AZURE_VAULT_URL not set
+  - Real Azure free tier testing (10k operations free per month)
+  - Azure AD credential documentation (Environment variables, CLI, Managed Identity)
+  - Alternative mocking via Azure SDK interfaces
+- **Documentation Enhancements**
+  - README.md: Added "Why Vaultmux?" section explaining dotfiles framework motivation
+  - README.md: Updated to include Azure Key Vault in all backend tables and comparisons
+  - docs/_coverpage.md: Updated from 6 to 7 backends
+  - ARCHITECTURE.md: Added Azure to feature matrix, implementation diagram, and "When to Use" guidance
+  - Azure Key Vault comparison highlighting HSM backing, RBAC, and soft-delete features
 
 ### Changed
 
-- **go.mod** - Added Google Cloud SDK dependencies
-  - `cloud.google.com/go/secretmanager` v1.16.0
-  - `google.golang.org/api` v0.257.0
-  - `google.golang.org/grpc` v1.77.0
-  - Go version upgraded from 1.23 to 1.24.0 (GCP SDK requirement)
-- **README.md** - Updated for 6 backends
-  - Updated tagline from "Unified interface for multiple secret management backends" to "The definitive Go library for multi-vault secret management"
-  - Updated intro paragraph to mention all 5 backends explicitly
-  - Related Projects section restructured (Supported Backends + Similar Projects)
-  - Added detailed backend descriptions in Related Projects
-- **docs/_coverpage.md** - Updated for 5 backends
-  - New tagline: "The definitive Go library for multi-vault secret management"
-  - Updated feature list to show 5 backends
-  - Emphasized multiple integration patterns (CLI, SDK, OS APIs)
-- **ROADMAP.md** - GCP Secret Manager marked "IN PROGRESS (v0.4.0)"
-  - Current status updated from v0.2.0 to v0.4.0
-  - Added GCP to supported backends list
-  - AWS marked "IMPLEMENTED (v0.3.0)"
-  - Comprehensive GCP testing strategy (no emulator, real GCP approach)
-  - API mapping documentation
-  - IAM permissions JSON policy template
-  - Comparison to AWS implementation
-  - Updated backend feature matrix with GCP row
-  - Updated implementation priority (v0.3.0 released, v0.4.0 in progress)
-  - Last updated date: 2025-12-08
-- **factory.go** - Added `BackendGCPSecretManager` constant
-  - Updated Config comment to include "gcpsecrets"
+- **go.mod** - Added Azure SDK dependencies
+  - `github.com/Azure/azure-sdk-for-go/sdk/azcore` v1.20.0
+  - `github.com/Azure/azure-sdk-for-go/sdk/azidentity` v1.13.1
+  - `github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets` v1.4.0
+- **factory.go** - Added `BackendAzureKeyVault` constant
+  - Updated Config comment to include "azurekeyvault"
   - Maintains backward compatibility
+- **vaultmux.go** - Updated package documentation
+  - SDK-based backends now includes Azure Key Vault
+  - Updated Backend interface comment to list all 7 backends
+  - Added Azure Key Vault configuration example
 
 ### Technical Details
 
-- **Pattern Validation**: Second SDK-based backend (after AWS) confirms interface universality across clouds
-- **Session Semantics**: GCP project ID + service account credentials validate flexible session patterns
-- **Error Handling**: GCP gRPC status codes map cleanly to vaultmux standard errors
-- **Testing Strategy**: Real GCP testing (no emulator) with graceful skip when credentials unavailable
-- **Integration Type**: Native SDK (not CLI subprocess) - same pattern as AWS
-- **API Simplicity**: GCP SDK is notably cleaner than AWS v2 (fewer methods, better design)
+- **Pattern Validation**: Third SDK-based backend (after AWS and GCP) confirms universal cloud provider support
+- **Session Semantics**: Azure AD credentials (Managed Identity, Service Principal, CLI) validate flexible auth patterns
+- **Error Handling**: Azure ResponseError with HTTP status codes map cleanly to vaultmux standard errors
+- **Testing Strategy**: Real Azure testing (no emulator) with graceful skip when credentials unavailable
+- **Integration Type**: Native SDK (not CLI subprocess) - same pattern as AWS and GCP
+- **API Design**: Azure SDK uses interface-based design, excellent for mocking and testing
 
-### Developer Experience
+### Comparison to AWS/GCP Implementations
 
-- **Local Testing**: Unit tests run with no GCP setup required
-- **Integration Testing**: Real GCP free tier enables zero-cost testing (first 6 versions free)
-- **Fast Tests**: GCP API is fast (~50-100ms latency)
-- **Better SDK**: Google's Go SDKs are excellent quality (cleaner than AWS)
-- **No Emulator Needed**: GCP free tier eliminates need for local emulation
-
-### Comparison to AWS Implementation
-
-- **Simpler API**: 5 core operations vs AWS's more complex API surface
-- **Cleaner SDK**: Google's SDK design is more intuitive than AWS v2
-- **Built-in Versioning**: GCP versions automatically on update (no separate API)
-- **Two-Step Creation**: CreateSecret + AddSecretVersion (different from AWS single CreateSecret)
-- **No Local Emulator**: Must use real GCP (but free tier makes this viable)
-- **Faster Implementation**: ~3-4 days vs ~5 days for AWS (simpler patterns)
-
-## [0.3.0] - 2025-12-07
-
-### Added
-
-- **AWS Secrets Manager Backend** - First SDK-based backend (validates interface universality)
-  - Native AWS SDK for Go v2 integration (`github.com/aws/aws-sdk-go-v2/service/secretsmanager`)
-  - IAM credential support (environment variables, shared config, instance roles)
-  - Automatic pagination for large secret collections (100+ secrets)
-  - Secret name prefixing for namespace isolation (`myapp/secret-name`)
-  - Tag-based secret organization (`vaultmux:true`, `prefix:<value>`)
-  - Configurable AWS region support
-  - LocalStack endpoint override for local testing
-  - Force deletion (immediate, no recovery period)
-  - Comprehensive error mapping (AWS exceptions → vaultmux errors)
-  - No session management needed (IAM credentials are long-lived or SDK-managed)
-- **LocalStack Testing Infrastructure** - Zero-cost AWS testing
-  - Docker-based AWS service emulation
-  - Complete Secrets Manager API coverage
-  - Integration tests with LocalStack endpoint override
-  - Alternative moto (Python mock) support documented
-  - CI/CD workflow examples for GitHub Actions
-- **AWS Implementation Documentation** (docs/AWS_IMPLEMENTATION_PLAN.md)
-  - 10-day phased implementation schedule
-  - Complete method-by-method code examples
-  - Session pattern explanation for IAM credentials
-  - Testing strategy (LocalStack, moto, mocked SDK)
-  - IAM permissions policy templates
-  - Error handling patterns
-  - Production deployment guidance
-
-### Changed
-
-- **go.mod** - Added AWS SDK v2 dependencies
-  - `github.com/aws/aws-sdk-go-v2` v1.40.1
-  - `github.com/aws/aws-sdk-go-v2/config` v1.32.3
-  - `github.com/aws/aws-sdk-go-v2/service/secretsmanager` v1.40.3
-  - Go version upgraded from 1.21 to 1.23 (AWS SDK requirement)
-- **README.md** - Updated for 5 backends
-  - Added AWS Secrets Manager to supported backends table
-  - Added "Integration" column (CLI vs SDK vs PowerShell vs OS)
-  - Updated backend comparison table with AWS column
-  - Added "When to Use AWS Secrets Manager" guidance
-  - Updated security considerations for IAM credentials
-  - Changed "Zero Dependencies" to "Minimal Dependencies" (accurate now)
-- **ROADMAP.md** - AWS Secrets Manager marked "IN PROGRESS (v0.3.0)"
-  - Comprehensive LocalStack/moto testing strategy
-  - API mapping documentation (GetItem → GetSecretValue, etc.)
-  - IAM permissions JSON policy template
-  - Cost analysis (~$0.40/secret/month + $0.05/10k API calls)
-  - Implementation priority updated (v0.3.0 in progress)
-- **factory.go** - Added `BackendAWSSecretsManager` constant
-  - Updated Config comment to include "awssecrets"
-  - Maintains backward compatibility
-
-### Technical Details
-
-- **Pattern Validation**: First SDK-based backend proves `Backend` interface works beyond CLI wrappers
-- **Session Semantics**: IAM credentials (long-lived, SDK-managed) validate session flexibility
-- **Error Handling**: AWS typed errors (`ResourceNotFoundException`, `ResourceExistsException`) map cleanly to vaultmux standard errors
-- **Testing Strategy**: LocalStack enables full integration testing without AWS account
-- **Integration Type**: Native SDK (not CLI subprocess) - different pattern from Bitwarden/1Password/pass
-
-### Developer Experience
-
-- **Local Testing**: `docker run localstack/localstack` + endpoint override enables offline development
-- **No AWS Account Needed**: Contributors can develop and test without AWS credentials
-- **Fast Tests**: LocalStack starts in seconds, integration tests run quickly
-- **Identical API**: LocalStack provides same API as production AWS
+- **Authentication Complexity**: Multiple Azure AD credential types (similar complexity to AWS)
+- **API Simplicity**: Synchronous operations (simpler than AWS, similar to GCP)
+- **Unique Features**: HSM-backed storage, soft-delete protection, certificate management
+- **SDK Quality**: Interface-based design (better for testing than AWS)
+- **No Local Emulator**: Must use real Azure (like GCP, but free tier makes this viable)
+- **Pager Pattern**: Iterator-based pagination (similar to GCP, different from AWS)
 
 ## [0.2.0] - 2025-12-07
 
@@ -308,8 +198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...v0.4.0
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/blackwell-systems/vaultmux/releases/tag/v0.1.0

@@ -21,11 +21,13 @@ const (
 	BackendAWSSecretsManager BackendType = "awssecrets"
 	// BackendGCPSecretManager represents the Google Cloud Secret Manager backend.
 	BackendGCPSecretManager BackendType = "gcpsecrets"
+	// BackendAzureKeyVault represents the Azure Key Vault backend.
+	BackendAzureKeyVault BackendType = "azurekeyvault"
 )
 
 // Config holds vault configuration.
 type Config struct {
-	// Backend type: "bitwarden", "1password", "pass", "wincred", "awssecrets", "gcpsecrets"
+	// Backend type: "bitwarden", "1password", "pass", "wincred", "awssecrets", "gcpsecrets", "azurekeyvault"
 	Backend BackendType
 
 	// Pass-specific

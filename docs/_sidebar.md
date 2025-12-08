@@ -33,6 +33,7 @@
 
 - **Resources**
   - [Changelog](CHANGELOG.md)
+  - [Brand Guidelines](BRAND.md)
   - [GitHub](https://github.com/blackwell-systems/vaultmux)
   - [Releases](https://github.com/blackwell-systems/vaultmux/releases)
   - [Go Package Docs](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)

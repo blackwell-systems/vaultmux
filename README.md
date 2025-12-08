@@ -2,16 +2,10 @@
 
 > **The definitive Go library for multi-vault secret management**
 
-[![Blackwell Systems™](https://raw.githubusercontent.com/blackwell-systems/blackwell-docs-theme/main/badge-trademark.svg)](https://github.com/blackwell-systems)
-[![Go Reference](https://pkg.go.dev/badge/github.com/blackwell-systems/vaultmux.svg)](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)
-[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://go.dev/)
-[![Version](https://img.shields.io/github/v/release/blackwell-systems/vaultmux)](https://github.com/blackwell-systems/vaultmux/releases)
-[![CI](https://github.com/blackwell-systems/vaultmux/workflows/CI/badge.svg)](https://github.com/blackwell-systems/vaultmux/actions)
-[![codecov](https://codecov.io/gh/blackwell-systems/vaultmux/branch/main/graph/badge.svg)](https://codecov.io/gh/blackwell-systems/vaultmux)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Sponsor](https://img.shields.io/badge/Sponsor-Buy%20Me%20a%20Coffee-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/blackwellsystems)
+[![Blackwell Systems™](https://raw.githubusercontent.com/blackwell-systems/blackwell-docs-theme/main/badge-trademark.svg)](https://github.com/blackwell-systems) [![Go Reference](https://pkg.go.dev/badge/github.com/blackwell-systems/vaultmux.svg)](https://pkg.go.dev/github.com/blackwell-systems/vaultmux) [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://go.dev/) [![Version](https://img.shields.io/github/v/release/blackwell-systems/vaultmux)](https://github.com/blackwell-systems/vaultmux/releases)
+[![CI](https://github.com/blackwell-systems/vaultmux/workflows/CI/badge.svg)](https://github.com/blackwell-systems/vaultmux/actions) [![codecov](https://codecov.io/gh/blackwell-systems/vaultmux/branch/main/graph/badge.svg)](https://codecov.io/gh/blackwell-systems/vaultmux) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Sponsor](https://img.shields.io/badge/Sponsor-Buy%20Me%20a%20Coffee-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/blackwellsystems)
 
-Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, and Google Cloud Secret Manager with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
+Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, and Azure Key Vault with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
 
 ## Features
 
@@ -32,6 +26,29 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 | **Windows Credential Manager** | PowerShell | OS-level auth, Windows Hello | Windows |
 | **AWS Secrets Manager** | SDK (aws-sdk-go-v2) | IAM auth, versioning, rotation | All |
 | **Google Cloud Secret Manager** | SDK (cloud.google.com/go) | ADC auth, auto-versioning, labels | All |
+| **Azure Key Vault** | SDK (azure-sdk-for-go) | Azure AD auth, HSM-backed, RBAC | All |
+
+## Why Vaultmux?
+
+Vaultmux was created to solve a real-world problem: **building a dotfiles framework that works for everyone**.
+
+When managing dotfiles across teams or open source projects, different users have different secret management preferences:
+- Some prefer local tools like `pass` (GPG-based, offline)
+- Others use commercial tools like 1Password or Bitwarden
+- Cloud-native users want AWS Secrets Manager, Google Cloud, or Azure
+- Windows users rely on Windows Credential Manager
+
+**The Problem**: Writing application logic that hardcodes a single backend locks you into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares.
+
+**The Solution**: Vaultmux provides a single, unified API that works with any backend. Write your code once, and users can choose their preferred secret management system without touching your application code.
+
+```go
+// Same code works with pass, Bitwarden, 1Password, AWS, GCP, Azure, etc.
+backend, _ := vaultmux.New(config)
+secret, _ := backend.GetNotes(ctx, "api-key", session)
+```
+
+This flexibility means your dotfiles framework (or any secret-dependent application) can support whatever workflows users throw at you—from privacy-focused GPG enthusiasts to enterprise teams using Azure Key Vault—all through one convenient interface.
 
 ## Installation
 
@@ -417,6 +434,10 @@ Contributions welcome! Please:
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details
+
+## Brand
+
+The **code** in this repository is licensed under MIT. The **Blackwell Systems™** name and logo are protected trademarks. See [BRAND.md](BRAND.md) for usage guidelines.
 
 ## Credits
 
