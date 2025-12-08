@@ -2,16 +2,17 @@
 
 # Vaultmux
 
-> Unified interface for multiple secret management backends
+> The definitive Go library for multi-vault secret management
 
 ```bash
 go get github.com/blackwell-systems/vaultmux
 ```
 
-- **Unified API** - Single interface for Bitwarden, 1Password, pass, and Windows Credential Manager
-- **Zero Dependencies** - Only Go stdlib, backends use their CLIs or OS APIs
+- **5 Backends** - Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager
+- **Zero-Code Switching** - Change backends without modifying application code
+- **Multiple Patterns** - CLI wrappers, native SDKs, OS APIs all through one interface
 - **Type-Safe** - Full Go interfaces with context support
-- **Cross-Platform** - Linux, macOS, Windows with native backend support
+- **Cross-Platform** - Linux, macOS, Windows, cloud-native AWS integration
 
 [Get Started](#vaultmux)
 [VIEW ON GITHUB](https://github.com/blackwell-systems/vaultmux)
