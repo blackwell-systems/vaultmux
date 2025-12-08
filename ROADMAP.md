@@ -48,6 +48,49 @@ backend, _ := vaultmux.New(vaultmux.Config{
 // Automatically uses Windows Hello / fingerprint for auth
 ```
 
+**Testing Strategy:**
+
+Since Windows Credential Manager is Windows-specific, we'll use a multi-pronged testing approach:
+
+1. **WSL2 Testing (Primary Path):**
+   - WSL2 can call Windows Credential Manager via PowerShell interop
+   - Develop on Linux environment, test against real Windows APIs
+   - Example: `powershell.exe -Command "Get-StoredCredential -Target 'test'"`
+   - This is our primary testing approach since WSL2 is available
+
+2. **Build Tags for Cross-Platform Code:**
+   ```go
+   // backends/wincred/wincred_windows.go
+   //go:build windows
+
+   // backends/wincred/wincred_unix.go
+   //go:build !windows
+   // Returns clear error: "Windows Credential Manager only available on Windows"
+   ```
+
+3. **Mock Backend for Development:**
+   - Create mock implementation for unit testing on any platform
+   - Fast TDD iteration without Windows dependency
+   - Mock simulates Windows Credential Manager behavior
+
+4. **GitHub Actions Windows Runners:**
+   - Automated testing on real Windows for CI/CD
+   - Free for open source repositories
+   - Tests run on `windows-latest` runner
+
+5. **Implementation Approach:**
+   - PowerShell cmdlets via `exec.Command("powershell.exe", "-Command", script)`
+   - Or native Win32 API via `golang.org/x/sys/windows` package
+   - Graceful degradation on non-Windows platforms
+
+**Development Workflow:**
+- Local TDD: Use mock backend on Mac/Linux
+- Integration testing: WSL2 with real Windows Credential Manager
+- CI/CD: GitHub Actions Windows runner
+- Final validation: Manual testing on native Windows
+
+This approach allows cross-platform development while ensuring production code is tested against real Windows Credential Manager.
+
 ---
 
 ### Cloud Provider Secret Managers
