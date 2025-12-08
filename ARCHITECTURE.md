@@ -99,7 +99,6 @@ github.com/blackwell-systems/vaultmux/
 ### 2.2 Component Architecture
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a','background':'#1a1a1a','mainBkg':'#2a2a2a','secondBkg':'#3a3a3a'}}}%%
 graph TB
     subgraph Consumer["Consumer Application"]
         App[Application Code]
@@ -151,7 +150,6 @@ graph TB
 ### 2.3 Data Flow
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 sequenceDiagram
     participant Consumer
     participant Factory
@@ -278,7 +276,6 @@ const (
 ## 4. Authentication Flow
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 flowchart TD
     Start([Authenticate ctx]) --> CheckCache{Cached<br/>Session<br/>Exists?}
 
@@ -331,7 +328,6 @@ flowchart TD
 ### 5.1 Session Caching Strategy
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 graph LR
     subgraph Memory["In-Memory"]
         Sess[Session Object]
@@ -380,7 +376,6 @@ func (c *SessionCache) Clear() error
 ### 5.3 Auto-Refresh Pattern
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 sequenceDiagram
     participant App
     participant AutoRefresh as AutoRefreshSession
@@ -414,7 +409,6 @@ sequenceDiagram
 ### 6.1 GetNotes Operation Flow
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 flowchart TD
     Start([GetNotes ctx, name, session]) --> ValidateSession{Session<br/>Valid?}
 
@@ -449,7 +443,6 @@ flowchart TD
 ### 6.2 CreateItem Operation
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 sequenceDiagram
     participant App
     participant Backend
@@ -479,7 +472,6 @@ sequenceDiagram
 ### 7.1 Registration Pattern
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 graph TD
     subgraph Import["Backend Package Import"]
         InitFunc[init Function]
@@ -560,7 +552,6 @@ var (
 ### 8.2 Error Wrapping
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 graph LR
     CLIError[CLI Error<br/>exit code 1] --> WrapError[WrapError<br/>backend, operation, item]
     WrapError --> VaultmuxError[Vaultmux Error<br/>with context]
@@ -598,7 +589,6 @@ if err != nil {
 ### 9.1 Test Pyramid
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 graph TD
     subgraph Integration["Integration Tests<br/>Real CLI"]
         IntTests[Test with pass<br/>in test environment]
@@ -661,7 +651,6 @@ func TestMyCode(t *testing.T) {
 ### 10.2 Implementation Differences
 
 ```mermaid
-%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
 graph TB
     subgraph BW["Bitwarden"]
         BWSess[Session Token]
