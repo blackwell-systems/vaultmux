@@ -3,6 +3,7 @@
 > **The definitive Go library for multi-vault secret management**
 
 [![Blackwell Systems™](https://raw.githubusercontent.com/blackwell-systems/blackwell-docs-theme/main/badge-trademark.svg)](https://github.com/blackwell-systems)
+[![Go Reference](https://pkg.go.dev/badge/github.com/blackwell-systems/vaultmux.svg)](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)
 [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://go.dev/)
 [![Version](https://img.shields.io/github/v/release/blackwell-systems/vaultmux)](https://github.com/blackwell-systems/vaultmux/releases)
 [![CI](https://github.com/blackwell-systems/vaultmux/workflows/CI/badge.svg)](https://github.com/blackwell-systems/vaultmux/actions)
