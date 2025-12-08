@@ -50,6 +50,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated Backend interface comment to list all 7 backends
   - Added Azure Key Vault configuration example
 
+### Fixed
+
+- **Bitwarden Backend** - Replace `--session` CLI flag with `BW_SESSION` environment variable
+  - The `--session` argument is unreliable with Bitwarden CLI
+  - Using environment variable is the officially documented method
+  - Applies to all Bitwarden CLI commands (unlock, sync, get, list, create, edit, delete)
+  - Improves session management reliability and authentication consistency
+
 ### Technical Details
 
 - **Pattern Validation**: Third SDK-based backend (after AWS and GCP) confirms universal cloud provider support
