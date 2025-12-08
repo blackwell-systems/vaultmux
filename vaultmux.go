@@ -78,8 +78,15 @@ type Backend interface {
 	UpdateItem(ctx context.Context, name, content string, session Session) error
 	DeleteItem(ctx context.Context, name string, session Session) error
 
-	// Location management (folders/vaults)
-	LocationManager
+	// Location management (folders/vaults) - optional, not all backends support
+	// ListLocations returns all available locations/folders/vaults.
+	ListLocations(ctx context.Context, session Session) ([]string, error)
+	// LocationExists checks if a location exists.
+	LocationExists(ctx context.Context, name string, session Session) (bool, error)
+	// CreateLocation creates a new location/folder/vault.
+	CreateLocation(ctx context.Context, name string, session Session) error
+	// ListItemsInLocation returns items in a specific location.
+	ListItemsInLocation(ctx context.Context, locType, locValue string, session Session) ([]*Item, error)
 }
 
 // Session represents an authenticated session.
