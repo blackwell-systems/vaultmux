@@ -32,6 +32,7 @@
   - [Feature Matrix](ROADMAP.md#backend-feature-matrix)
 
 - **Resources**
+  - [Changelog](CHANGELOG.md)
   - [GitHub](https://github.com/blackwell-systems/vaultmux)
   - [Releases](https://github.com/blackwell-systems/vaultmux/releases)
   - [Go Package Docs](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)

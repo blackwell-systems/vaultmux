@@ -28,9 +28,10 @@ vaultmux/
 ├── session.go           # Session caching utilities
 ├── errors.go            # Standard error types
 └── backends/
-    ├── bitwarden/       # Reference implementation
-    ├── onepassword/     # Reference implementation
-    ├── pass/            # Reference implementation
+    ├── bitwarden/       # Reference: Token-based, remote sync
+    ├── onepassword/     # Reference: Biometric auth, auto-sync
+    ├── pass/            # Reference: Local, GPG-based
+    ├── wincred/         # Reference: Platform-specific (Windows only)
     └── yourbackend/     # Your new backend here
 ```
 
@@ -1205,6 +1206,12 @@ Study these backends for implementation patterns:
 - Best for: API-based backends with complex authentication
 - Features: Account management, vault selection, service accounts
 - Pattern: Token-based with location support
+
+### **wincred** (`backends/wincred/wincred_windows.go`)
+- Best for: Platform-specific backends, OS-integrated auth
+- Features: No session management, build tags for cross-platform, PowerShell interop
+- Pattern: OS-level authentication, no tokens
+- Platform: Windows only (graceful error on Unix via build tags)
 
 ---
 
