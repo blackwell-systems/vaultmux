@@ -1,18 +1,19 @@
 # Vaultmux Roadmap
 
-> **Current Status:** v0.4.0 - Production-ready with 5 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager)
+> **Current Status:** v0.2.0 - Production-ready with 6 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager)
 
 This document outlines planned backend integrations and major features for vaultmux.
 
 ---
 
-## Supported Backends (v0.4.0)
+## Supported Backends (v0.2.0)
 
 - **Bitwarden** - Open source, self-hostable (Vaultwarden)
 - **1Password** - Enterprise-grade with biometric auth
 - **pass** - Unix password store (GPG + git)
 - **Windows Credential Manager** - Native Windows integration (v0.2.0)
-- **AWS Secrets Manager** - Cloud-native AWS secret storage (v0.3.0)
+- **AWS Secrets Manager** - Cloud-native AWS secret storage (v0.2.0)
+- **Google Cloud Secret Manager** - Cloud-native GCP secret storage (v0.2.0)
 
 ---
 
@@ -309,8 +310,8 @@ AWS Secrets Manager requires AWS account and incurs costs, so we'll use local em
 ---
 
 #### Google Cloud Secret Manager
-**Status:** 🚧 **IN PROGRESS** (v0.4.0)
-**Priority:** High - Second SDK-based backend, completes cloud trifecta
+**Status:** ✅ **IMPLEMENTED** (v0.2.0)
+**Priority:** High - Second SDK-based backend, validates cloud provider universality
 
 **Why:**
 - Native GCP integration for Google Cloud deployments
@@ -597,26 +598,26 @@ Unlike AWS (LocalStack) or Windows (WSL2), GCP Secret Manager has no good local 
 
 ## Implementation Priority
 
-### v0.2.0 ✅ RELEASED
+### v0.2.0 ✅ RELEASED (2025-12-08)
 1. **Windows Credential Manager** - Native Windows support ✅
-2. Documentation improvements (Docsify site, architecture diagrams) ✅
-3. Test coverage improvements (98.5% core coverage) ✅
+2. **AWS Secrets Manager** - First SDK-based backend ✅
+3. **Google Cloud Secret Manager** - Second SDK-based backend ✅
+4. **Error Handling Standardization** - ErrNotSupported sentinel error, consistent WrapError usage ✅
+5. Documentation improvements (Docsify site, architecture diagrams) ✅
+6. Test coverage improvements (98%+ core coverage) ✅
+7. LocalStack testing infrastructure for AWS ✅
+8. Application Default Credentials (ADC) patterns for GCP ✅
 
-### v0.3.0 ✅ RELEASED
-1. **AWS Secrets Manager** - First SDK-based backend ✅
-2. LocalStack testing infrastructure ✅
-3. IAM credential handling patterns ✅
+### v0.3.0 📋 PLANNED
+1. **Azure Key Vault** - Completes big three cloud providers
+2. Azure AD authentication patterns
+3. Vault URL configuration support
 
-### v0.4.0 🚧 IN PROGRESS
-1. **Google Cloud Secret Manager** - Second SDK-based backend, completes AWS/GCP cloud pair
-2. Application Default Credentials (ADC) authentication patterns
-3. Real GCP integration testing (no local emulator available)
+### v0.4.0 📋 PLANNED
+1. **HashiCorp Vault** - Enterprise option
+2. Dynamic secret support exploration
 
 ### v0.5.0
-1. **Azure Key Vault** - Completes big three cloud providers
-2. **HashiCorp Vault** - Enterprise option
-
-### v0.6.0
 1. **KeePassXC** - Open source file-based option
 2. Additional enterprise managers (Keeper, Doppler)
 
@@ -666,4 +667,4 @@ Have a backend you'd like to see supported? [Open an issue](https://github.com/b
 ---
 
 **Last Updated:** 2025-12-08
-**Current Version:** v0.4.0 (in progress)
+**Current Version:** v0.2.0 (released)
