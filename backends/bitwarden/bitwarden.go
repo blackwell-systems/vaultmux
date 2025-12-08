@@ -62,7 +62,8 @@ func (b *Backend) IsAuthenticated(ctx context.Context) bool {
 	}
 
 	// Verify with bw status
-	cmd := exec.CommandContext(ctx, "bw", "unlock", "--check", "--session", cached.Token)
+	cmd := exec.CommandContext(ctx, "bw", "unlock", "--check")
+	cmd.Env = append(os.Environ(), "BW_SESSION="+cached.Token)
 	return cmd.Run() == nil
 }
 
@@ -109,7 +110,8 @@ func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
 
 // Sync synchronizes the vault with the server.
 func (b *Backend) Sync(ctx context.Context, session vaultmux.Session) error {
-	cmd := exec.CommandContext(ctx, "bw", "sync", "--session", session.Token())
+	cmd := exec.CommandContext(ctx, "bw", "sync")
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	if err := cmd.Run(); err != nil {
 		return vaultmux.WrapError("bitwarden", "sync", "", err)
 	}
@@ -118,7 +120,8 @@ func (b *Backend) Sync(ctx context.Context, session vaultmux.Session) error {
 
 // GetItem retrieves a vault item by name.
 func (b *Backend) GetItem(ctx context.Context, name string, session vaultmux.Session) (*vaultmux.Item, error) {
-	cmd := exec.CommandContext(ctx, "bw", "get", "item", name, "--session", session.Token())
+	cmd := exec.CommandContext(ctx, "bw", "get", "item", name)
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	out, err := cmd.Output()
 	if err != nil {
 		if strings.Contains(string(out), "Not found") {
@@ -183,7 +186,8 @@ func (b *Backend) ItemExists(ctx context.Context, name string, session vaultmux.
 
 // ListItems lists all items in the vault.
 func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*vaultmux.Item, error) {
-	cmd := exec.CommandContext(ctx, "bw", "list", "items", "--session", session.Token())
+	cmd := exec.CommandContext(ctx, "bw", "list", "items")
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, vaultmux.WrapError("bitwarden", "list", "", err)
@@ -240,7 +244,8 @@ func (b *Backend) CreateItem(ctx context.Context, name, content string, session 
 	}
 
 	// Create item
-	cmd = exec.CommandContext(ctx, "bw", "create", "item", strings.TrimSpace(string(encoded)), "--session", session.Token())
+	cmd = exec.CommandContext(ctx, "bw", "create", "item", strings.TrimSpace(string(encoded)))
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	if err := cmd.Run(); err != nil {
 		return vaultmux.WrapError("bitwarden", "create", name, err)
 	}
@@ -274,7 +279,8 @@ func (b *Backend) UpdateItem(ctx context.Context, name, content string, session 
 	}
 
 	// Edit item
-	cmd = exec.CommandContext(ctx, "bw", "edit", "item", item.ID, strings.TrimSpace(string(encoded)), "--session", session.Token())
+	cmd = exec.CommandContext(ctx, "bw", "edit", "item", item.ID, strings.TrimSpace(string(encoded)))
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	if err := cmd.Run(); err != nil {
 		return vaultmux.WrapError("bitwarden", "update", name, err)
 	}
@@ -290,7 +296,8 @@ func (b *Backend) DeleteItem(ctx context.Context, name string, session vaultmux.
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, "bw", "delete", "item", item.ID, "--session", session.Token())
+	cmd := exec.CommandContext(ctx, "bw", "delete", "item", item.ID)
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	if err := cmd.Run(); err != nil {
 		return vaultmux.WrapError("bitwarden", "delete", name, err)
 	}
@@ -300,7 +307,8 @@ func (b *Backend) DeleteItem(ctx context.Context, name string, session vaultmux.
 
 // ListLocations lists folders.
 func (b *Backend) ListLocations(ctx context.Context, session vaultmux.Session) ([]string, error) {
-	cmd := exec.CommandContext(ctx, "bw", "list", "folders", "--session", session.Token())
+	cmd := exec.CommandContext(ctx, "bw", "list", "folders")
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, vaultmux.WrapError("bitwarden", "list-folders", "", err)
@@ -352,7 +360,8 @@ func (b *Backend) CreateLocation(ctx context.Context, name string, session vault
 		return vaultmux.WrapError("bitwarden", "encode-folder", name, err)
 	}
 
-	cmd = exec.CommandContext(ctx, "bw", "create", "folder", strings.TrimSpace(string(encoded)), "--session", session.Token())
+	cmd = exec.CommandContext(ctx, "bw", "create", "folder", strings.TrimSpace(string(encoded)))
+	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	if err := cmd.Run(); err != nil {
 		return vaultmux.WrapError("bitwarden", "create-folder", name, err)
 	}
@@ -387,7 +396,8 @@ type bwSession struct {
 func (s *bwSession) Token() string { return s.token }
 
 func (s *bwSession) IsValid(ctx context.Context) bool {
-	cmd := exec.CommandContext(ctx, "bw", "unlock", "--check", "--session", s.token)
+	cmd := exec.CommandContext(ctx, "bw", "unlock", "--check")
+	cmd.Env = append(os.Environ(), "BW_SESSION="+s.token)
 	return cmd.Run() == nil
 }
 
