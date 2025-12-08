@@ -34,11 +34,10 @@ func TestIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
-	defer backend.Close()
+	defer func() { _ = backend.Close() }()
 
 	// Initialize
-	err = backend.Init(ctx)
-	if err != nil {
+	if err := backend.Init(ctx); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
 
@@ -56,21 +55,20 @@ func TestIntegration(t *testing.T) {
 	testItem := fmt.Sprintf("integration-test-%d", os.Getpid())
 
 	// Clean up any existing test item
-	backend.DeleteItem(ctx, testItem, session)
+	_ = backend.DeleteItem(ctx, testItem, session)
 
 	// Test CreateItem
 	t.Run("CreateItem", func(t *testing.T) {
-		err = backend.CreateItem(ctx, testItem, "test-secret-value", session)
-		if err != nil {
+		if err := backend.CreateItem(ctx, testItem, "test-secret-value", session); err != nil {
 			t.Errorf("CreateItem() error = %v", err)
 		}
 	})
 
 	// Test ItemExists (should exist)
 	t.Run("ItemExists_True", func(t *testing.T) {
-		exists, err := backend.ItemExists(ctx, testItem, session)
-		if err != nil {
-			t.Errorf("ItemExists() error = %v", err)
+		exists, err2 := backend.ItemExists(ctx, testItem, session)
+		if err2 != nil {
+			t.Errorf("ItemExists() error = %v", err2)
 		}
 		if !exists {
 			t.Error("ItemExists() = false, want true")
@@ -79,9 +77,9 @@ func TestIntegration(t *testing.T) {
 
 	// Test GetItem
 	t.Run("GetItem", func(t *testing.T) {
-		item, err := backend.GetItem(ctx, testItem, session)
-		if err != nil {
-			t.Errorf("GetItem() error = %v", err)
+		item, err2 := backend.GetItem(ctx, testItem, session)
+		if err2 != nil {
+			t.Errorf("GetItem() error = %v", err2)
 		}
 		if item == nil {
 			t.Fatal("GetItem() returned nil item")
@@ -96,9 +94,9 @@ func TestIntegration(t *testing.T) {
 
 	// Test GetNotes
 	t.Run("GetNotes", func(t *testing.T) {
-		notes, err := backend.GetNotes(ctx, testItem, session)
-		if err != nil {
-			t.Errorf("GetNotes() error = %v", err)
+		notes, err2 := backend.GetNotes(ctx, testItem, session)
+		if err2 != nil {
+			t.Errorf("GetNotes() error = %v", err2)
 		}
 		if notes != "test-secret-value" {
 			t.Errorf("GetNotes() = %q, want %q", notes, "test-secret-value")
@@ -107,15 +105,14 @@ func TestIntegration(t *testing.T) {
 
 	// Test UpdateItem
 	t.Run("UpdateItem", func(t *testing.T) {
-		err = backend.UpdateItem(ctx, testItem, "updated-secret-value", session)
-		if err != nil {
+		if err := backend.UpdateItem(ctx, testItem, "updated-secret-value", session); err != nil {
 			t.Errorf("UpdateItem() error = %v", err)
 		}
 
 		// Verify update
-		notes, err := backend.GetNotes(ctx, testItem, session)
-		if err != nil {
-			t.Errorf("GetNotes() after update error = %v", err)
+		notes, err2 := backend.GetNotes(ctx, testItem, session)
+		if err2 != nil {
+			t.Errorf("GetNotes() after update error = %v", err2)
 		}
 		if notes != "updated-secret-value" {
 			t.Errorf("GetNotes() after update = %q, want %q", notes, "updated-secret-value")
@@ -124,9 +121,9 @@ func TestIntegration(t *testing.T) {
 
 	// Test ListItems
 	t.Run("ListItems", func(t *testing.T) {
-		items, err := backend.ListItems(ctx, session)
-		if err != nil {
-			t.Errorf("ListItems() error = %v", err)
+		items, err2 := backend.ListItems(ctx, session)
+		if err2 != nil {
+			t.Errorf("ListItems() error = %v", err2)
 		}
 
 		found := false
@@ -143,15 +140,14 @@ func TestIntegration(t *testing.T) {
 
 	// Test DeleteItem
 	t.Run("DeleteItem", func(t *testing.T) {
-		err = backend.DeleteItem(ctx, testItem, session)
-		if err != nil {
+		if err := backend.DeleteItem(ctx, testItem, session); err != nil {
 			t.Errorf("DeleteItem() error = %v", err)
 		}
 
 		// Verify deletion
-		exists, err := backend.ItemExists(ctx, testItem, session)
-		if err != nil {
-			t.Errorf("ItemExists() after delete error = %v", err)
+		exists, err2 := backend.ItemExists(ctx, testItem, session)
+		if err2 != nil {
+			t.Errorf("ItemExists() after delete error = %v", err2)
 		}
 		if exists {
 			t.Error("ItemExists() after delete = true, want false")
@@ -160,32 +156,32 @@ func TestIntegration(t *testing.T) {
 
 	// Test error cases
 	t.Run("GetItem_NotFound", func(t *testing.T) {
-		_, err := backend.GetItem(ctx, "nonexistent-item", session)
-		if err == nil {
+		_, err2 := backend.GetItem(ctx, "nonexistent-item", session)
+		if err2 == nil {
 			t.Error("GetItem() for nonexistent item expected error, got nil")
 		}
-		if err != nil && err != vaultmux.ErrNotFound {
-			t.Errorf("GetItem() error = %v, want ErrNotFound", err)
+		if err2 != nil && err2 != vaultmux.ErrNotFound {
+			t.Errorf("GetItem() error = %v, want ErrNotFound", err2)
 		}
 	})
 
 	t.Run("UpdateItem_NotFound", func(t *testing.T) {
-		err := backend.UpdateItem(ctx, "nonexistent-item", "value", session)
-		if err == nil {
+		err2 := backend.UpdateItem(ctx, "nonexistent-item", "value", session)
+		if err2 == nil {
 			t.Error("UpdateItem() for nonexistent item expected error, got nil")
 		}
-		if err != nil && err != vaultmux.ErrNotFound {
-			t.Errorf("UpdateItem() error = %v, want ErrNotFound", err)
+		if err2 != nil && err2 != vaultmux.ErrNotFound {
+			t.Errorf("UpdateItem() error = %v, want ErrNotFound", err2)
 		}
 	})
 
 	t.Run("DeleteItem_NotFound", func(t *testing.T) {
-		err := backend.DeleteItem(ctx, "nonexistent-item", session)
-		if err == nil {
+		err2 := backend.DeleteItem(ctx, "nonexistent-item", session)
+		if err2 == nil {
 			t.Error("DeleteItem() for nonexistent item expected error, got nil")
 		}
-		if err != nil && err != vaultmux.ErrNotFound {
-			t.Errorf("DeleteItem() error = %v, want ErrNotFound", err)
+		if err2 != nil && err2 != vaultmux.ErrNotFound {
+			t.Errorf("DeleteItem() error = %v, want ErrNotFound", err2)
 		}
 	})
 
@@ -193,19 +189,18 @@ func TestIntegration(t *testing.T) {
 	t.Run("CreateItem_AlreadyExists", func(t *testing.T) {
 		// Create first time
 		itemName := fmt.Sprintf("duplicate-test-%d", os.Getpid())
-		err = backend.CreateItem(ctx, itemName, "value", session)
-		if err != nil {
+		if err := backend.CreateItem(ctx, itemName, "value", session); err != nil {
 			t.Fatalf("CreateItem() first call error = %v", err)
 		}
-		defer backend.DeleteItem(ctx, itemName, session)
+		defer func() { _ = backend.DeleteItem(ctx, itemName, session) }()
 
 		// Try to create again
-		err = backend.CreateItem(ctx, itemName, "value2", session)
-		if err == nil {
+		err2 := backend.CreateItem(ctx, itemName, "value2", session)
+		if err2 == nil {
 			t.Error("CreateItem() for existing item expected error, got nil")
 		}
-		if err != nil && err != vaultmux.ErrAlreadyExists {
-			t.Errorf("CreateItem() error = %v, want ErrAlreadyExists", err)
+		if err2 != nil && err2 != vaultmux.ErrAlreadyExists {
+			t.Errorf("CreateItem() error = %v, want ErrAlreadyExists", err2)
 		}
 	})
 }
@@ -227,10 +222,9 @@ func TestIntegration_Pagination(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
-	defer backend.Close()
+	defer func() { _ = backend.Close() }()
 
-	err = backend.Init(ctx)
-	if err != nil {
+	if err := backend.Init(ctx); err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
 
@@ -247,8 +241,7 @@ func TestIntegration_Pagination(t *testing.T) {
 		itemName := fmt.Sprintf("pagination-test-%d-%d", os.Getpid(), i)
 		createdItems[i] = itemName
 
-		err = backend.CreateItem(ctx, itemName, fmt.Sprintf("value-%d", i), session)
-		if err != nil {
+		if err := backend.CreateItem(ctx, itemName, fmt.Sprintf("value-%d", i), session); err != nil {
 			t.Logf("CreateItem(%d) error = %v (may already exist)", i, err)
 		}
 	}
@@ -256,14 +249,14 @@ func TestIntegration_Pagination(t *testing.T) {
 	// Clean up after test
 	defer func() {
 		for _, itemName := range createdItems {
-			backend.DeleteItem(ctx, itemName, session)
+			_ = backend.DeleteItem(ctx, itemName, session)
 		}
 	}()
 
 	// List all items
-	items, err := backend.ListItems(ctx, session)
-	if err != nil {
-		t.Fatalf("ListItems() error = %v", err)
+	items, err2 := backend.ListItems(ctx, session)
+	if err2 != nil {
+		t.Fatalf("ListItems() error = %v", err2)
 	}
 
 	// Verify we got at least our created items
