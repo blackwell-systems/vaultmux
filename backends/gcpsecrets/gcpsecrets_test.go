@@ -2,6 +2,7 @@ package gcpsecrets
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -147,29 +148,29 @@ func TestBackend_LocationManagement(t *testing.T) {
 
 	t.Run("ListLocations", func(t *testing.T) {
 		_, err := backend.ListLocations(ctx, session)
-		if err == nil {
-			t.Error("ListLocations() expected error, got nil")
+		if !errors.Is(err, vaultmux.ErrNotSupported) {
+			t.Errorf("ListLocations() error = %v, want ErrNotSupported", err)
 		}
 	})
 
 	t.Run("LocationExists", func(t *testing.T) {
 		_, err := backend.LocationExists(ctx, "test", session)
-		if err == nil {
-			t.Error("LocationExists() expected error, got nil")
+		if !errors.Is(err, vaultmux.ErrNotSupported) {
+			t.Errorf("LocationExists() error = %v, want ErrNotSupported", err)
 		}
 	})
 
 	t.Run("CreateLocation", func(t *testing.T) {
 		err := backend.CreateLocation(ctx, "test", session)
-		if err == nil {
-			t.Error("CreateLocation() expected error, got nil")
+		if !errors.Is(err, vaultmux.ErrNotSupported) {
+			t.Errorf("CreateLocation() error = %v, want ErrNotSupported", err)
 		}
 	})
 
 	t.Run("ListItemsInLocation", func(t *testing.T) {
 		_, err := backend.ListItemsInLocation(ctx, "test", "test", session)
-		if err == nil {
-			t.Error("ListItemsInLocation() expected error, got nil")
+		if !errors.Is(err, vaultmux.ErrNotSupported) {
+			t.Errorf("ListItemsInLocation() error = %v, want ErrNotSupported", err)
 		}
 	})
 }

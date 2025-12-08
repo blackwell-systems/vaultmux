@@ -442,22 +442,23 @@ func (b *Backend) handleGCPError(err error, operation, itemName string) error {
 }
 
 // Location management stubs (GCP doesn't have native "folders" like 1Password vaults).
-// Could be implemented using labels in the future, but not supported yet.
+// These operations are not supported and return ErrNotSupported.
+// Could be implemented using labels in the future, but not currently supported.
 
 func (b *Backend) ListLocations(ctx context.Context, session vaultmux.Session) ([]string, error) {
-	return nil, fmt.Errorf("location management not supported for GCP Secret Manager")
+	return nil, vaultmux.ErrNotSupported
 }
 
 func (b *Backend) LocationExists(ctx context.Context, name string, session vaultmux.Session) (bool, error) {
-	return false, fmt.Errorf("location management not supported for GCP Secret Manager")
+	return false, vaultmux.ErrNotSupported
 }
 
 func (b *Backend) CreateLocation(ctx context.Context, name string, session vaultmux.Session) error {
-	return fmt.Errorf("location management not supported for GCP Secret Manager")
+	return vaultmux.ErrNotSupported
 }
 
 func (b *Backend) ListItemsInLocation(ctx context.Context, locType, locValue string, session vaultmux.Session) ([]*vaultmux.Item, error) {
-	return nil, fmt.Errorf("location management not supported for GCP Secret Manager")
+	return nil, vaultmux.ErrNotSupported
 }
 
 // init registers the GCP Secret Manager backend with vaultmux.

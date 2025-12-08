@@ -191,4 +191,7 @@ var (
 
 	// ErrPermissionDenied indicates insufficient permissions.
 	ErrPermissionDenied = errors.New("permission denied")
+
+	// ErrNotSupported indicates the operation is not supported by this backend.
+	ErrNotSupported = errors.New("operation not supported")
 )

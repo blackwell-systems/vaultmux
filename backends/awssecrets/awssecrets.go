@@ -379,22 +379,23 @@ func (b *Backend) handleAWSError(err error, operation, itemName string) error {
 }
 
 // Location management stubs (AWS doesn't have native "folders" like 1Password vaults)
-// These return errors indicating the feature is not supported.
+// These operations are not supported and return ErrNotSupported.
+// Could be implemented using tags in the future, but not currently supported.
 
 func (b *Backend) ListLocations(ctx context.Context, session vaultmux.Session) ([]string, error) {
-	return nil, fmt.Errorf("location management not supported for AWS Secrets Manager")
+	return nil, vaultmux.ErrNotSupported
 }
 
 func (b *Backend) LocationExists(ctx context.Context, name string, session vaultmux.Session) (bool, error) {
-	return false, fmt.Errorf("location management not supported for AWS Secrets Manager")
+	return false, vaultmux.ErrNotSupported
 }
 
 func (b *Backend) CreateLocation(ctx context.Context, name string, session vaultmux.Session) error {
-	return fmt.Errorf("location management not supported for AWS Secrets Manager")
+	return vaultmux.ErrNotSupported
 }
 
 func (b *Backend) ListItemsInLocation(ctx context.Context, locType, locValue string, session vaultmux.Session) ([]*vaultmux.Item, error) {
-	return nil, fmt.Errorf("location management not supported for AWS Secrets Manager")
+	return nil, vaultmux.ErrNotSupported
 }
 
 // init registers the AWS Secrets Manager backend with vaultmux.

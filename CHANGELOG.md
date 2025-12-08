@@ -38,6 +38,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ROADMAP.md: Cost analysis (~$0.06/secret version after free tier)
   - ROADMAP.md: Comparison to AWS (simpler API, cleaner SDK, no local emulator)
 
+### Fixed
+
+- **Error Handling Standardization** - Consistent error wrapping across all backends
+  - Added `ErrNotSupported` sentinel error for unsupported operations (location management)
+  - AWS Secrets Manager location methods now return `ErrNotSupported` (previously returned fmt.Errorf)
+  - GCP Secret Manager location methods now return `ErrNotSupported` (previously returned fmt.Errorf)
+  - Windows Credential Manager parse errors now use `vaultmux.WrapError()` (previously used fmt.Errorf)
+  - All location management tests updated to use `errors.Is()` for proper error checking
+  - Enables proper error type checking with `errors.Is(err, vaultmux.ErrNotSupported)`
+- **Error Testing Improvements**
+  - AWS location management tests now properly check for `ErrNotSupported` using `errors.Is()`
+  - GCP location management tests now properly check for `ErrNotSupported` using `errors.Is()`
+  - Added `"errors"` import to GCP test file for error type checking
+
 ### Changed
 
 - **go.mod** - Added Google Cloud SDK dependencies

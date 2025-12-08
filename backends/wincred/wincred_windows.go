@@ -167,7 +167,7 @@ $creds | ForEach-Object {
 			Target string `json:"Target"`
 		}
 		if err := json.Unmarshal(out, &single); err != nil {
-			return nil, fmt.Errorf("parse credential list: %w", err)
+			return nil, vaultmux.WrapError("wincred", "list", "", fmt.Errorf("parse credential list: %w", err))
 		}
 		results = []struct {
 			Name   string `json:"Name"`
@@ -175,7 +175,7 @@ $creds | ForEach-Object {
 		}{single}
 	} else {
 		if err := json.Unmarshal(out, &results); err != nil {
-			return nil, fmt.Errorf("parse credential list: %w", err)
+			return nil, vaultmux.WrapError("wincred", "list", "", fmt.Errorf("parse credential list: %w", err))
 		}
 	}
 
