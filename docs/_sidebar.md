@@ -25,6 +25,12 @@
   - [Testing Your Backend](EXTENDING.md#testing-your-backend)
   - [Complete Example](EXTENDING.md#complete-example)
 
+- **Roadmap**
+  - [Future Backends](ROADMAP.md)
+  - [Windows Support](ROADMAP.md#high-priority-windows-native-support)
+  - [Cloud Providers](ROADMAP.md#cloud-provider-secret-managers)
+  - [Feature Matrix](ROADMAP.md#backend-feature-matrix)
+
 - **Resources**
   - [GitHub](https://github.com/blackwell-systems/vaultmux)
   - [Releases](https://github.com/blackwell-systems/vaultmux/releases)
