@@ -27,9 +27,9 @@ type Backend struct {
 	client *secretsmanager.Client
 
 	// Configuration
-	region      string // AWS region (e.g., us-east-1, us-west-2)
-	prefix      string // Secret name prefix for namespacing (e.g., "myapp/")
-	endpoint    string // Custom endpoint URL for LocalStack testing
+	region   string // AWS region (e.g., us-east-1, us-west-2)
+	prefix   string // Secret name prefix for namespacing (e.g., "myapp/")
+	endpoint string // Custom endpoint URL for LocalStack testing
 
 	// AWS config (credentials, region)
 	awsConfig aws.Config

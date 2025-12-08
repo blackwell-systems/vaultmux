@@ -12,7 +12,7 @@ import (
 //
 // The SDK handles token refresh automatically via Application Default Credentials (ADC).
 type gcpSession struct {
-	projectID string  // GCP project ID is required for all operations
+	projectID string // GCP project ID is required for all operations
 	backend   *Backend
 }
 

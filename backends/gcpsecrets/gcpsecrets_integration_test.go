@@ -18,9 +18,10 @@ import (
 //   - GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 //
 // Run with:
-//   GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json \
-//   GCP_PROJECT_ID=my-project \
-//   go test -v ./backends/gcpsecrets/
+//
+//	GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json \
+//	GCP_PROJECT_ID=my-project \
+//	go test -v ./backends/gcpsecrets/
 //
 // Note: Unlike AWS (LocalStack) or Windows (WSL2), GCP has no good local emulator.
 // These tests require a real GCP project or will skip gracefully.
@@ -253,7 +254,8 @@ func TestIntegration_Pagination(t *testing.T) {
 
 	ctx := context.Background()
 
-	if err := backend.Init(ctx); err != nil {
+	err = backend.Init(ctx)
+	if err != nil {
 		t.Fatalf("Init() error = %v", err)
 	}
 
@@ -266,7 +268,7 @@ func TestIntegration_Pagination(t *testing.T) {
 	itemCount := 5
 	for i := 0; i < itemCount; i++ {
 		itemName := fmt.Sprintf("item-%d", i)
-		err := backend.CreateItem(ctx, itemName, "content", session)
+		err = backend.CreateItem(ctx, itemName, "content", session)
 		if err != nil {
 			t.Fatalf("CreateItem(%q) error = %v", itemName, err)
 		}

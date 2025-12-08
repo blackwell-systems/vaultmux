@@ -13,14 +13,16 @@ import (
 // TestIntegration runs complete CRUD tests against LocalStack.
 //
 // Prerequisites:
-//   docker run -d -p 4566:4566 -e SERVICES=secretsmanager localstack/localstack
+//
+//	docker run -d -p 4566:4566 -e SERVICES=secretsmanager localstack/localstack
 //
 // Run with:
-//   LOCALSTACK_ENDPOINT=http://localhost:4566 \
-//   AWS_ACCESS_KEY_ID=test \
-//   AWS_SECRET_ACCESS_KEY=test \
-//   AWS_REGION=us-east-1 \
-//   go test -v ./backends/awssecrets/
+//
+//	LOCALSTACK_ENDPOINT=http://localhost:4566 \
+//	AWS_ACCESS_KEY_ID=test \
+//	AWS_SECRET_ACCESS_KEY=test \
+//	AWS_REGION=us-east-1 \
+//	go test -v ./backends/awssecrets/
 func TestIntegration(t *testing.T) {
 	endpoint := os.Getenv("LOCALSTACK_ENDPOINT")
 	if endpoint == "" {
