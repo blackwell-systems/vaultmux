@@ -8,9 +8,9 @@ This document outlines planned backend integrations and major features for vault
 
 ## Supported Backends (v0.1.0)
 
-- ✅ **Bitwarden** - Open source, self-hostable (Vaultwarden)
-- ✅ **1Password** - Enterprise-grade with biometric auth
-- ✅ **pass** - Unix password store (GPG + git)
+- **Bitwarden** - Open source, self-hostable (Vaultwarden)
+- **1Password** - Enterprise-grade with biometric auth
+- **pass** - Unix password store (GPG + git)
 
 ---
 
@@ -20,7 +20,7 @@ This document outlines planned backend integrations and major features for vault
 
 #### Windows Credential Manager
 **Status:** Planned for v0.2.0
-**Priority:** 🔥 High - Critical for Windows users
+**Priority:** High - Critical for Windows users
 
 **Why:**
 - Built into every Windows installation (no CLI to install)
@@ -54,7 +54,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### AWS Secrets Manager
 **Status:** Under Consideration
-**Priority:** 🔶 Medium-High
+**Priority:** Medium-High
 
 **Why:**
 - De facto standard for AWS deployments
@@ -80,7 +80,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### Azure Key Vault
 **Status:** Under Consideration
-**Priority:** 🔶 Medium-High
+**Priority:** Medium-High
 
 **Why:**
 - Native Azure integration
@@ -107,7 +107,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### Google Cloud Secret Manager
 **Status:** Under Consideration
-**Priority:** 🟡 Medium
+**Priority:** Medium
 
 **Why:**
 - Native GCP integration
@@ -129,7 +129,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### HashiCorp Vault
 **Status:** Under Consideration
-**Priority:** 🔶 Medium-High
+**Priority:** Medium-High
 
 **Why:**
 - Industry-standard enterprise secret management
@@ -155,7 +155,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### Keeper Security
 **Status:** Under Consideration
-**Priority:** 🟡 Medium
+**Priority:** Medium
 
 **Why:**
 - Strong enterprise password manager
@@ -175,7 +175,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### KeePass / KeePassXC
 **Status:** Under Consideration
-**Priority:** 🟡 Medium
+**Priority:** Medium
 
 **Why:**
 - Popular open-source password manager
@@ -203,7 +203,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### Doppler
 **Status:** Under Consideration
-**Priority:** 🔵 Low-Medium
+**Priority:** Low-Medium
 
 **Why:**
 - Built for developers
@@ -225,7 +225,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### Dashlane
 **Status:** Low Priority
-**Priority:** 🔵 Low
+**Priority:** Low
 
 **Why:**
 - Popular consumer password manager
@@ -239,7 +239,7 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 #### LastPass
 **Status:** Low Priority
-**Priority:** 🔵 Low
+**Priority:** Low
 
 **Why:**
 - Still widely used despite recent issues
@@ -255,14 +255,14 @@ backend, _ := vaultmux.New(vaultmux.Config{
 
 | Backend | Windows Native | Cross-Platform | Self-Host | Free Tier | Session Type | Best For |
 |---------|---------------|----------------|-----------|-----------|--------------|----------|
-| **Bitwarden** | ❌ | ✅ | ✅ | ✅ | Token | Open source teams |
-| **1Password** | ❌ | ✅ | ❌ | ❌ | Token + Biometric | Enterprise |
-| **pass** | ❌ | ✅ (Unix) | ✅ | ✅ | GPG Agent | Unix power users |
-| **Win Credential Mgr** | ✅ | ❌ | N/A | ✅ | OS Auth | Windows devs |
-| **AWS Secrets Mgr** | ❌ | ✅ | ❌ | ❌ ($) | IAM | AWS deployments |
-| **Azure Key Vault** | ❌ | ✅ | ❌ | ❌ ($) | Azure AD | Azure deployments |
-| **HashiCorp Vault** | ❌ | ✅ | ✅ | ✅ (OSS) | Token | Enterprise infra |
-| **KeePassXC** | ❌ | ✅ | ✅ | ✅ | Master Password | Privacy-focused |
+| **Bitwarden** | No | Yes | Yes | Yes | Token | Open source teams |
+| **1Password** | No | Yes | No | No | Token + Biometric | Enterprise |
+| **pass** | No | Yes (Unix) | Yes | Yes | GPG Agent | Unix power users |
+| **Win Credential Mgr** | Yes | No | N/A | Yes | OS Auth | Windows devs |
+| **AWS Secrets Mgr** | No | Yes | No | No ($) | IAM | AWS deployments |
+| **Azure Key Vault** | No | Yes | No | No ($) | Azure AD | Azure deployments |
+| **HashiCorp Vault** | No | Yes | Yes | Yes (OSS) | Token | Enterprise infra |
+| **KeePassXC** | No | Yes | Yes | Yes | Master Password | Privacy-focused |
 
 ---
 

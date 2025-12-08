@@ -90,6 +90,7 @@ go get github.com/blackwell-systems/vaultmux
 
 - [Architecture](ARCHITECTURE.md) - Design principles and internals
 - [Extending](EXTENDING.md) - Adding new backends
+- [Roadmap](ROADMAP.md) - Future backend support and features
 
 ## Requirements
 
