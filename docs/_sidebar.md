@@ -5,23 +5,27 @@
   - [Supported Backends](#supported-backends)
 
 - **Architecture**
-  - [Design Principles](ARCHITECTURE.md#design-principles)
-  - [Core Interfaces](ARCHITECTURE.md#core-interfaces)
-  - [Backend Implementation](ARCHITECTURE.md#backend-implementation)
-  - [Session Management](ARCHITECTURE.md#session-management)
+  - [Overview](ARCHITECTURE.md)
+  - [Design Goals](ARCHITECTURE.md#1-design-goals)
+  - [Architecture Overview](ARCHITECTURE.md#2-architecture-overview)
+  - [Core Interfaces](ARCHITECTURE.md#3-core-interfaces)
+  - [Authentication Flow](ARCHITECTURE.md#4-authentication-flow)
+  - [Session Management](ARCHITECTURE.md#5-session-management)
+  - [CRUD Operations](ARCHITECTURE.md#6-crud-operations)
+  - [Backend Registration](ARCHITECTURE.md#7-backend-registration)
+  - [Error Handling](ARCHITECTURE.md#8-error-handling)
+  - [Testing Strategy](ARCHITECTURE.md#9-testing-strategy)
+  - [Backend Comparison](ARCHITECTURE.md#10-backend-comparison)
 
 - **Extending**
-  - [Adding Backends](EXTENDING.md#adding-a-new-backend)
-  - [Custom Backends](EXTENDING.md#custom-backend-example)
-  - [Testing](EXTENDING.md#testing-your-backend)
-
-- **API Reference**
-  - [Backend Interface](#backend-interface)
-  - [Session Interface](#session-interface)
-  - [LocationManager](#locationmanager)
-  - [Errors](#common-errors)
+  - [Overview](EXTENDING.md)
+  - [Understanding Architecture](EXTENDING.md#understanding-the-architecture)
+  - [Backend Requirements](EXTENDING.md#backend-interface-requirements)
+  - [Implementation Steps](EXTENDING.md#implementation-steps)
+  - [Testing Your Backend](EXTENDING.md#testing-your-backend)
+  - [Complete Example](EXTENDING.md#complete-example)
 
 - **Resources**
   - [GitHub](https://github.com/blackwell-systems/vaultmux)
   - [Releases](https://github.com/blackwell-systems/vaultmux/releases)
-  - [Related Projects](#related-projects)
+  - [Go Package Docs](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)

@@ -1,8 +1,8 @@
 # Vaultmux Architecture Document
 
 > **Module:** `github.com/blackwell-systems/vaultmux`
-> **Status:** Draft
-> **Author:** Claude
+> **Status:** Production
+> **Author:** Blackwell Systems
 > **Created:** 2025-12-07
 
 ---
@@ -25,13 +25,13 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 1. [Design Goals](#1-design-goals)
 2. [Architecture Overview](#2-architecture-overview)
 3. [Core Interfaces](#3-core-interfaces)
-4. [Backend Implementations](#4-backend-implementations)
+4. [Authentication Flow](#4-authentication-flow)
 5. [Session Management](#5-session-management)
-6. [Error Handling](#6-error-handling)
-7. [Testing Strategy](#7-testing-strategy)
-8. [Usage Examples](#8-usage-examples)
-9. [Backend Comparison](#9-backend-comparison)
-10. [Future Backends](#10-future-backends)
+6. [CRUD Operations](#6-crud-operations)
+7. [Backend Registration](#7-backend-registration)
+8. [Error Handling](#8-error-handling)
+9. [Testing Strategy](#9-testing-strategy)
+10. [Backend Comparison](#10-backend-comparison)
 
 ---
 
@@ -74,7 +74,6 @@ github.com/blackwell-systems/vaultmux/
 ├── vaultmux.go           # Core types: Backend, Session, Item, errors
 ├── factory.go            # New() factory, backend registration
 ├── session.go            # Session interface, caching logic
-├── options.go            # Functional options for configuration
 ├── errors.go             # Typed errors: ErrNotFound, ErrAuth, etc.
 │
 ├── backends/
@@ -92,73 +91,101 @@ github.com/blackwell-systems/vaultmux/
 ├── mock/
 │   └── mock.go            # In-memory mock for testing
 │
-├── internal/
-│   └── exec/
-│       └── exec.go        # Command execution helpers
-│
-├── go.mod
-├── go.sum
-├── README.md
-├── ARCHITECTURE.md        # This document
-└── vaultmux_test.go
+└── internal/
+    └── exec/
+        └── exec.go        # Command execution helpers
 ```
 
-### 2.2 Component Diagram
+### 2.2 Component Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         Consumer Application                         │
-│                                                                      │
-│   import "github.com/blackwell-systems/vaultmux"                    │
-│                                                                      │
-│   backend, _ := vaultmux.New(vaultmux.Config{...})                  │
-│   session, _ := backend.Authenticate(ctx)                           │
-│   notes, _ := backend.GetNotes(ctx, "SSH-Config", session)          │
-└─────────────────────────────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                          vaultmux.Backend                            │
-│                           (interface)                                │
-│                                                                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌───────────┐  │
-│  │ Authenticate│  │  GetNotes   │  │ CreateItem  │  │  Sync     │  │
-│  │ GetItem     │  │  ItemExists │  │ UpdateItem  │  │  Close    │  │
-│  │ ListItems   │  │  DeleteItem │  │ ListLocations│ │  Init     │  │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └───────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-                                  │
-            ┌─────────────────────┼─────────────────────┐
-            ▼                     ▼                     ▼
-┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐
-│     Bitwarden     │  │    1Password      │  │       pass        │
-│                   │  │                   │  │                   │
-│  Shells out to:   │  │  Shells out to:   │  │  Shells out to:   │
-│  $ bw get item    │  │  $ op item get    │  │  $ pass show      │
-│  $ bw create      │  │  $ op item create │  │  $ pass insert    │
-│  $ bw sync        │  │  $ op signin      │  │  $ pass rm        │
-└───────────────────┘  └───────────────────┘  └───────────────────┘
-         │                      │                      │
-         ▼                      ▼                      ▼
-┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐
-│   Bitwarden CLI   │  │  1Password CLI    │  │    pass + GPG     │
-│       (bw)        │  │       (op)        │  │                   │
-└───────────────────┘  └───────────────────┘  └───────────────────┘
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a','background':'#1a1a1a','mainBkg':'#2a2a2a','secondBkg':'#3a3a3a'}}}%%
+graph TB
+    subgraph Consumer["Consumer Application"]
+        App[Application Code]
+    end
+
+    subgraph VaultmuxCore["Vaultmux Core"]
+        Factory[Factory<br/>New Config]
+        Backend[Backend Interface]
+        Session[Session Interface]
+        Cache[SessionCache]
+    end
+
+    subgraph Backends["Backend Implementations"]
+        BW[Bitwarden<br/>Backend]
+        OP[1Password<br/>Backend]
+        Pass[pass<br/>Backend]
+        Mock[Mock<br/>Backend]
+    end
+
+    subgraph CLI["External CLI Tools"]
+        BWCLI[bw<br/>Bitwarden CLI]
+        OPCLI[op<br/>1Password CLI]
+        PassCLI[pass + GPG]
+    end
+
+    App -->|New Config| Factory
+    Factory -->|Create| Backend
+    Backend -->|Authenticate| Session
+    Session -.->|Cache| Cache
+
+    Backend -.->|implements| BW
+    Backend -.->|implements| OP
+    Backend -.->|implements| Pass
+    Backend -.->|implements| Mock
+
+    BW -->|exec| BWCLI
+    OP -->|exec| OPCLI
+    Pass -->|exec| PassCLI
+
+    classDef coreStyle fill:#2d7dd2,stroke:#4a9eff,stroke-width:2px,color:#e0e0e0
+    classDef backendStyle fill:#3a3a3a,stroke:#6eb5ff,stroke-width:1px,color:#e0e0e0
+    classDef cliStyle fill:#1a1a1a,stroke:#4a9eff,stroke-width:1px,color:#e0e0e0
+
+    class Factory,Backend,Session,Cache coreStyle
+    class BW,OP,Pass,Mock backendStyle
+    class BWCLI,OPCLI,PassCLI cliStyle
 ```
 
 ### 2.3 Data Flow
 
-```
-┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
-│  Config  │────▶│ Factory  │────▶│ Backend  │────▶│ Session  │
-└──────────┘     └──────────┘     └──────────┘     └──────────┘
-                      │                 │                │
-                      │                 │                │
-                      ▼                 ▼                ▼
-               ┌──────────┐     ┌──────────────┐  ┌────────────┐
-               │ Backend  │     │ CLI Command  │  │ Cached     │
-               │ Selection│     │ Execution    │  │ Token      │
-               └──────────┘     └──────────────┘  └────────────┘
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+sequenceDiagram
+    participant Consumer
+    participant Factory
+    participant Backend
+    participant Session
+    participant CLI as Backend CLI
+
+    Consumer->>Factory: New(Config)
+    Factory->>Factory: Apply Defaults
+    Factory->>Factory: Lookup Backend
+    Factory->>Backend: factory(cfg)
+    Backend-->>Factory: backend instance
+    Factory-->>Consumer: backend
+
+    Consumer->>Backend: Init(ctx)
+    Backend->>CLI: Check CLI installed
+    CLI-->>Backend: exists
+    Backend-->>Consumer: nil (success)
+
+    Consumer->>Backend: Authenticate(ctx)
+    Backend->>Session: Check cached
+    alt Cache Valid
+        Session-->>Backend: cached token
+    else Cache Invalid/Missing
+        Backend->>CLI: bw unlock / op signin
+        CLI-->>Backend: session token
+        Backend->>Session: Cache token
+    end
+    Backend-->>Consumer: Session
+
+    Consumer->>Backend: GetNotes(ctx, name, session)
+    Backend->>CLI: bw get item / op item get
+    CLI-->>Backend: item JSON
+    Backend-->>Consumer: notes string
 ```
 
 ---
@@ -198,14 +225,6 @@ type Backend interface {
     // Location Management (folders/vaults)
     LocationManager
 }
-
-// LocationManager handles organizational units.
-type LocationManager interface {
-    ListLocations(ctx context.Context, session Session) ([]string, error)
-    LocationExists(ctx context.Context, name string, session Session) (bool, error)
-    CreateLocation(ctx context.Context, name string, session Session) error
-    ListItemsInLocation(ctx context.Context, locType, locValue string, session Session) ([]*Item, error)
-}
 ```
 
 ### 3.2 Session Interface
@@ -227,7 +246,7 @@ type Session interface {
 }
 ```
 
-### 3.3 Item Type
+### 3.3 Item Structure
 
 ```go
 // Item represents a vault item.
@@ -254,274 +273,319 @@ const (
 )
 ```
 
-### 3.4 Configuration
-
-```go
-// Config holds backend configuration.
-type Config struct {
-    // Backend type: "bitwarden", "1password", "pass"
-    Backend BackendType
-
-    // Pass-specific
-    StorePath string // Default: ~/.password-store
-    Prefix    string // Default: "dotfiles"
-
-    // Session management
-    SessionFile  string        // Where to cache session token
-    SessionTTL   time.Duration // How long to cache (default: 30m)
-
-    // Backend-specific options
-    Options map[string]string
-}
-
-// BackendType identifies a vault backend.
-type BackendType string
-
-const (
-    BackendBitwarden   BackendType = "bitwarden"
-    BackendOnePassword BackendType = "1password"
-    BackendPass        BackendType = "pass"
-)
-```
-
 ---
 
-## 4. Backend Implementations
+## 4. Authentication Flow
 
-### 4.1 Bitwarden Backend
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+flowchart TD
+    Start([Authenticate ctx]) --> CheckCache{Cached<br/>Session<br/>Exists?}
 
-**CLI:** `bw` (Bitwarden CLI)
+    CheckCache -->|Yes| ValidateCache{Session<br/>Valid?}
+    CheckCache -->|No| CheckStatus
 
-**Authentication Flow:**
-```
-1. Check bw status → "locked" or "unauthenticated"
-2. If unauthenticated: prompt user to run `bw login`
-3. If locked: run `bw unlock --raw` → returns session token
-4. Cache session token to file (chmod 0600)
-5. Pass --session flag to all subsequent commands
-```
+    ValidateCache -->|Yes| ReturnCached[Return Cached Session]
+    ValidateCache -->|No| CheckStatus
 
-**Key Commands:**
-```bash
-bw status                           # Check login/lock status
-bw unlock --raw                     # Get session token
-bw sync --session $TOKEN            # Sync vault
-bw get item "name" --session $TOKEN # Get item as JSON
-bw create item $JSON --session $TOKEN
-bw edit item $ID $JSON --session $TOKEN
-bw delete item $ID --session $TOKEN
-```
+    CheckStatus[Check CLI Status] --> IsLoggedIn{Logged<br/>In?}
 
-**Folder Mapping:**
-- `ListLocations` → `bw list folders`
-- `CreateLocation` → `bw create folder`
-- Items have `folderId` field
+    IsLoggedIn -->|No| ErrorNotLoggedIn[Error: Not Logged In<br/>Hint: bw login]
+    IsLoggedIn -->|Yes| IsLocked{Vault<br/>Locked?}
 
-### 4.2 1Password Backend
+    IsLocked -->|Yes| PromptPassword[Prompt for Password]
+    IsLocked -->|No| GetToken
 
-**CLI:** `op` (1Password CLI v2)
+    PromptPassword --> ExecuteUnlock[Execute unlock CLI]
+    ExecuteUnlock --> GetToken[Get Session Token]
 
-**Authentication Flow:**
-```
-1. Check op account list → returns accounts
-2. Run op signin → interactive auth, returns session token
-3. Session token valid for 30 minutes
-4. Pass token via OP_SESSION_* env var or --session flag
+    GetToken --> CacheToken[Cache Token<br/>TTL: 30 min]
+    CacheToken --> CreateSession[Create Session Object]
+    CreateSession --> ReturnSession[Return Session]
+
+    ReturnCached --> End([Session])
+    ErrorNotLoggedIn --> End
+    ReturnSession --> End
+
+    style Start fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style End fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style CheckCache fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style ValidateCache fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style IsLoggedIn fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style IsLocked fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
-**Key Commands:**
-```bash
-op account list                     # List accounts
-op signin                           # Interactive sign-in
-op item get "name" --format json    # Get item
-op item create --category=SecureNote --title="name" notes="content"
-op item edit "name" notes="content"
-op item delete "name"
-op vault list                       # List vaults (locations)
-```
+### 4.1 Authentication States
 
-**Vault Mapping:**
-- `ListLocations` → `op vault list`
-- Items have `vault` field
-- Can specify `--vault` on operations
-
-### 4.3 Pass Backend
-
-**CLI:** `pass` + `gpg`
-
-**Authentication Flow:**
-```
-1. Check if ~/.password-store exists
-2. GPG agent handles decryption (may prompt for passphrase)
-3. No session token - each operation may trigger GPG prompt
-4. GPG agent caches passphrase (configurable timeout)
-```
-
-**Key Commands:**
-```bash
-pass ls                             # List all entries
-pass show "prefix/name"             # Decrypt and show
-pass insert -m "prefix/name"        # Create (multiline)
-pass insert -m -f "prefix/name"     # Update (force overwrite)
-pass rm -f "prefix/name"            # Delete
-pass git pull / push                # Sync (if git-enabled)
-```
-
-**Directory Mapping:**
-- `ListLocations` → list top-level directories in store
-- `CreateLocation` → `mkdir` in store
-- Items stored as: `~/.password-store/<prefix>/<name>.gpg`
+| State | Description | CLI Check | Action |
+|-------|-------------|-----------|--------|
+| **Unauthenticated** | Never logged in | `bw status` → unauthenticated | Prompt: `bw login` |
+| **Locked** | Logged in but locked | `bw status` → locked | Execute: `bw unlock` |
+| **Unlocked** | Active session | `bw unlock --check` → success | Use cached token |
+| **Expired** | Session expired | Token fails validation | Re-unlock or refresh |
 
 ---
 
 ## 5. Session Management
 
-### 5.1 Session Caching
+### 5.1 Session Caching Strategy
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+graph LR
+    subgraph Memory["In-Memory"]
+        Sess[Session Object]
+    end
+
+    subgraph Disk["~/.config/vaultmux/"]
+        Cache[.bw-session<br/>JSON File]
+    end
+
+    subgraph CacheData["Cache Structure"]
+        Token[Token: string]
+        Created[Created: time]
+        Expires[Expires: time]
+        Backend[Backend: string]
+    end
+
+    Sess -->|Save| Cache
+    Cache -->|Load| Sess
+    Cache -.->|Contains| CacheData
+
+    style Sess fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style Cache fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style Token,Created,Expires,Backend fill:#1a1a1a,stroke:#4a9eff,color:#e0e0e0
+```
+
+### 5.2 Cache Operations
 
 ```go
-// SessionCache handles session persistence.
+// SessionCache handles session persistence to disk.
 type SessionCache struct {
     path string
     ttl  time.Duration
 }
 
-// File format (JSON):
-// {
-//   "token": "...",
-//   "created": "2025-12-07T10:00:00Z",
-//   "expires": "2025-12-07T10:30:00Z",
-//   "backend": "bitwarden"
-// }
-
+// Load reads a cached session from disk.
+// Returns nil if cache doesn't exist, is invalid, or expired.
 func (c *SessionCache) Load() (*CachedSession, error)
-func (c *SessionCache) Save(token string, ttl time.Duration) error
+
+// Save writes a session to disk with restricted permissions (0600).
+func (c *SessionCache) Save(token, backend string) error
+
+// Clear removes the cached session.
 func (c *SessionCache) Clear() error
 ```
 
-### 5.2 Session Lifecycle
+### 5.3 Auto-Refresh Pattern
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   New()     │────▶│   Init()    │────▶│Authenticate │
-└─────────────┘     └─────────────┘     └─────────────┘
-                                               │
-                          ┌────────────────────┤
-                          ▼                    ▼
-                   ┌─────────────┐     ┌─────────────┐
-                   │ Load cached │     │ Interactive │
-                   │   session   │     │    auth     │
-                   └─────────────┘     └─────────────┘
-                          │                    │
-                          ▼                    ▼
-                   ┌─────────────┐     ┌─────────────┐
-                   │  Validate   │     │   Cache     │
-                   │   token     │     │   token     │
-                   └─────────────┘     └─────────────┘
-                          │                    │
-                          └─────────┬──────────┘
-                                    ▼
-                             ┌─────────────┐
-                             │   Return    │
-                             │   Session   │
-                             └─────────────┘
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+sequenceDiagram
+    participant App
+    participant AutoRefresh as AutoRefreshSession
+    participant Inner as Inner Session
+    participant Backend
+
+    App->>AutoRefresh: Token()
+    AutoRefresh->>Inner: IsValid(ctx)?
+
+    alt Session Valid
+        Inner-->>AutoRefresh: true
+        AutoRefresh->>Inner: Token()
+        Inner-->>AutoRefresh: token
+        AutoRefresh-->>App: token
+    else Session Expired
+        Inner-->>AutoRefresh: false
+        AutoRefresh->>Inner: Refresh(ctx)
+        Inner->>Backend: Re-authenticate
+        Backend-->>Inner: new token
+        Inner-->>AutoRefresh: success
+        AutoRefresh->>Inner: Token()
+        Inner-->>AutoRefresh: new token
+        AutoRefresh-->>App: new token
+    end
 ```
 
-### 5.3 Auto-Refresh
+---
+
+## 6. CRUD Operations
+
+### 6.1 GetNotes Operation Flow
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+flowchart TD
+    Start([GetNotes ctx, name, session]) --> ValidateSession{Session<br/>Valid?}
+
+    ValidateSession -->|No| ReturnAuthError[Return: ErrNotAuthenticated]
+    ValidateSession -->|Yes| ExecuteCLI[Execute CLI Command<br/>bw get item name]
+
+    ExecuteCLI --> CheckExit{Exit<br/>Code}
+
+    CheckExit -->|0| ParseJSON[Parse JSON Response]
+    CheckExit -->|Non-zero| CheckError{Error<br/>Type?}
+
+    CheckError -->|Not Found| ReturnNotFound[Return: ErrNotFound]
+    CheckError -->|Auth Failed| ReturnExpired[Return: ErrSessionExpired]
+    CheckError -->|Other| ReturnError[Return: Wrapped Error]
+
+    ParseJSON --> ExtractNotes[Extract notes Field]
+    ExtractNotes --> ReturnNotes[Return: notes, nil]
+
+    ReturnAuthError --> End([notes, error])
+    ReturnNotFound --> End
+    ReturnExpired --> End
+    ReturnError --> End
+    ReturnNotes --> End
+
+    style Start fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style End fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style ValidateSession fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style CheckExit fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style CheckError fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+```
+
+### 6.2 CreateItem Operation
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+sequenceDiagram
+    participant App
+    participant Backend
+    participant CLI as Backend CLI
+    participant Server as Vault Server
+
+    App->>Backend: CreateItem(ctx, name, content, session)
+    Backend->>Backend: Validate session
+    Backend->>Backend: Check item exists
+
+    alt Item Already Exists
+        Backend-->>App: ErrAlreadyExists
+    else Item Doesn't Exist
+        Backend->>Backend: Build item JSON
+        Backend->>CLI: create item --template json
+        CLI->>Server: Upload encrypted item
+        Server-->>CLI: Success + item ID
+        CLI-->>Backend: Exit code 0
+        Backend-->>App: nil (success)
+    end
+```
+
+---
+
+## 7. Backend Registration
+
+### 7.1 Registration Pattern
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+graph TD
+    subgraph Import["Backend Package Import"]
+        InitFunc[init Function]
+    end
+
+    subgraph Factory["Factory Registry"]
+        Registry[map<br/>BackendType → Factory]
+        Register[RegisterBackend]
+    end
+
+    subgraph Creation["Backend Creation"]
+        NewCall[New Config]
+        Lookup[Lookup Factory]
+        Create[Call Factory Function]
+    end
+
+    InitFunc -->|Calls| Register
+    Register -->|Stores in| Registry
+    NewCall -->|Queries| Registry
+    Registry -->|Returns| Lookup
+    Lookup -->|Invokes| Create
+
+    style InitFunc fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style Registry fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style Create fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+```
+
+### 7.2 Example Backend Registration
 
 ```go
-// AutoRefreshSession wraps a session with automatic refresh.
-type AutoRefreshSession struct {
-    inner   Session
-    backend Backend
-    mu      sync.Mutex
+// In backends/bitwarden/bitwarden.go
+package bitwarden
+
+import "github.com/blackwell-systems/vaultmux"
+
+func init() {
+    vaultmux.RegisterBackend(vaultmux.BackendBitwarden, func(cfg vaultmux.Config) (vaultmux.Backend, error) {
+        return New(cfg.Options, cfg.SessionFile)
+    })
 }
+```
 
-func (s *AutoRefreshSession) Token() string {
-    s.mu.Lock()
-    defer s.mu.Unlock()
+### 7.3 Consumer Usage
 
-    if !s.inner.IsValid(context.Background()) {
-        // Attempt refresh
-        if err := s.inner.Refresh(context.Background()); err != nil {
-            // Re-authenticate
-            newSession, _ := s.backend.Authenticate(context.Background())
-            s.inner = newSession
-        }
-    }
-    return s.inner.Token()
+```go
+// Consumer application
+import (
+    "github.com/blackwell-systems/vaultmux"
+    _ "github.com/blackwell-systems/vaultmux/backends/bitwarden"  // Register via init()
+)
+
+func main() {
+    backend, err := vaultmux.New(vaultmux.Config{
+        Backend: vaultmux.BackendBitwarden,
+    })
+    // backend.init() was called during import
 }
 ```
 
 ---
 
-## 6. Error Handling
+## 8. Error Handling
 
-### 6.1 Error Types
+### 8.1 Error Types
 
 ```go
-// errors.go
-
-package vaultmux
-
-import "errors"
-
 var (
-    // ErrNotFound indicates the item doesn't exist.
-    ErrNotFound = errors.New("item not found")
-
-    // ErrAlreadyExists indicates the item already exists.
-    ErrAlreadyExists = errors.New("item already exists")
-
-    // ErrNotAuthenticated indicates no valid session.
-    ErrNotAuthenticated = errors.New("not authenticated")
-
-    // ErrSessionExpired indicates the session has expired.
-    ErrSessionExpired = errors.New("session expired")
-
-    // ErrBackendNotInstalled indicates the CLI tool is missing.
+    ErrNotFound            = errors.New("item not found")
+    ErrAlreadyExists       = errors.New("item already exists")
+    ErrNotAuthenticated    = errors.New("not authenticated")
+    ErrSessionExpired      = errors.New("session expired")
     ErrBackendNotInstalled = errors.New("backend CLI not installed")
-
-    // ErrBackendLocked indicates the vault is locked.
-    ErrBackendLocked = errors.New("vault is locked")
-
-    // ErrPermissionDenied indicates insufficient permissions.
-    ErrPermissionDenied = errors.New("permission denied")
+    ErrBackendLocked       = errors.New("vault is locked")
+    ErrPermissionDenied    = errors.New("permission denied")
 )
-
-// BackendError wraps errors with backend context.
-type BackendError struct {
-    Backend string
-    Op      string // Operation: "get", "create", "delete", etc.
-    Item    string // Item name (if applicable)
-    Err     error
-}
-
-func (e *BackendError) Error() string {
-    if e.Item != "" {
-        return fmt.Sprintf("%s: %s %q: %v", e.Backend, e.Op, e.Item, e.Err)
-    }
-    return fmt.Sprintf("%s: %s: %v", e.Backend, e.Op, e.Err)
-}
-
-func (e *BackendError) Unwrap() error {
-    return e.Err
-}
 ```
 
-### 6.2 Error Checking
+### 8.2 Error Wrapping
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+graph LR
+    CLIError[CLI Error<br/>exit code 1] --> WrapError[WrapError<br/>backend, operation, item]
+    WrapError --> VaultmuxError[Vaultmux Error<br/>with context]
+    VaultmuxError --> Consumer[Consumer<br/>errors.Is check]
+
+    style CLIError fill:#1a1a1a,stroke:#4a9eff,color:#e0e0e0
+    style WrapError fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style VaultmuxError fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style Consumer fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+```
 
 ```go
-// Usage
+// WrapError wraps CLI errors with context.
+func WrapError(backend, operation, item string, err error) error {
+    return fmt.Errorf("%s %s %q: %w", backend, operation, item, err)
+}
+
+// Consumer code
 notes, err := backend.GetNotes(ctx, "SSH-Config", session)
 if err != nil {
     if errors.Is(err, vaultmux.ErrNotFound) {
         // Item doesn't exist - create it
-        return backend.CreateItem(ctx, "SSH-Config", content, session)
     }
     if errors.Is(err, vaultmux.ErrSessionExpired) {
-        // Re-authenticate and retry
-        session, _ = backend.Authenticate(ctx)
-        return backend.GetNotes(ctx, "SSH-Config", session)
+        // Re-authenticate
     }
     return err
 }
@@ -529,279 +593,58 @@ if err != nil {
 
 ---
 
-## 7. Testing Strategy
+## 9. Testing Strategy
 
-### 7.1 Mock Backend
+### 9.1 Test Pyramid
 
-```go
-// mock/mock.go
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+graph TD
+    subgraph Integration["Integration Tests<br/>Real CLI"]
+        IntTests[Test with pass<br/>in test environment]
+    end
 
-package mock
+    subgraph Unit["Unit Tests<br/>Mock Backend"]
+        UnitTests[89%+ Coverage<br/>No external deps]
+    end
 
-import (
-    "context"
-    "sync"
+    subgraph Examples["Examples"]
+        ExampleTests[Runnable Examples<br/>Documentation]
+    end
 
-    "github.com/blackwell-systems/vaultmux"
-)
+    Integration -.->|Few| Top[Tests]
+    Unit -.->|Most| Top
+    Examples -.->|Some| Top
 
-// Backend is an in-memory mock for testing.
-type Backend struct {
-    items    map[string]*vaultmux.Item
-    mu       sync.RWMutex
-
-    // Behavior control
-    AuthError   error
-    GetError    error
-    CreateError error
-}
-
-func New() *Backend {
-    return &Backend{
-        items: make(map[string]*vaultmux.Item),
-    }
-}
-
-func (b *Backend) Name() string { return "mock" }
-
-func (b *Backend) Init(ctx context.Context) error { return nil }
-func (b *Backend) Close() error { return nil }
-
-func (b *Backend) IsAuthenticated(ctx context.Context) bool {
-    return b.AuthError == nil
-}
-
-func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
-    if b.AuthError != nil {
-        return nil, b.AuthError
-    }
-    return &mockSession{}, nil
-}
-
-func (b *Backend) GetNotes(ctx context.Context, name string, _ vaultmux.Session) (string, error) {
-    if b.GetError != nil {
-        return "", b.GetError
-    }
-    b.mu.RLock()
-    defer b.mu.RUnlock()
-
-    item, ok := b.items[name]
-    if !ok {
-        return "", vaultmux.ErrNotFound
-    }
-    return item.Notes, nil
-}
-
-func (b *Backend) CreateItem(ctx context.Context, name, content string, _ vaultmux.Session) error {
-    if b.CreateError != nil {
-        return b.CreateError
-    }
-    b.mu.Lock()
-    defer b.mu.Unlock()
-
-    if _, exists := b.items[name]; exists {
-        return vaultmux.ErrAlreadyExists
-    }
-    b.items[name] = &vaultmux.Item{
-        Name:  name,
-        Notes: content,
-        Type:  vaultmux.ItemTypeSecureNote,
-    }
-    return nil
-}
-
-// ... other methods
-
-// Helper methods for tests
-func (b *Backend) SetItem(name, content string) {
-    b.mu.Lock()
-    defer b.mu.Unlock()
-    b.items[name] = &vaultmux.Item{Name: name, Notes: content}
-}
-
-func (b *Backend) Clear() {
-    b.mu.Lock()
-    defer b.mu.Unlock()
-    b.items = make(map[string]*vaultmux.Item)
-}
+    style Integration fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style Unit fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style Examples fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
-### 7.2 Integration Tests
+### 9.2 Mock Backend
 
 ```go
-// vaultmux_integration_test.go
-//go:build integration
+// Mock backend for unit testing
+import "github.com/blackwell-systems/vaultmux/mock"
 
-package vaultmux_test
+func TestMyCode(t *testing.T) {
+    backend := mock.New()
 
-import (
-    "context"
-    "os"
-    "testing"
+    // Pre-populate with test data
+    backend.SetItem("test-key", "test-value")
 
-    "github.com/blackwell-systems/vaultmux"
-)
+    // Test error conditions
+    backend.GetError = errors.New("simulated error")
 
-func TestPassBackendIntegration(t *testing.T) {
-    if os.Getenv("VAULTMUX_TEST_PASS") == "" {
-        t.Skip("Set VAULTMUX_TEST_PASS=1 to run pass integration tests")
-    }
-
-    ctx := context.Background()
-    backend, err := vaultmux.New(vaultmux.Config{
-        Backend:   vaultmux.BackendPass,
-        Prefix:    "vaultmux-test",
-    })
-    if err != nil {
-        t.Fatalf("New: %v", err)
-    }
-    defer backend.Close()
-
-    if err := backend.Init(ctx); err != nil {
-        t.Fatalf("Init: %v", err)
-    }
-
-    session, err := backend.Authenticate(ctx)
-    if err != nil {
-        t.Fatalf("Authenticate: %v", err)
-    }
-
-    // Test create
-    testItem := "test-item-" + time.Now().Format("20060102150405")
-    err = backend.CreateItem(ctx, testItem, "test content", session)
-    if err != nil {
-        t.Fatalf("CreateItem: %v", err)
-    }
-
-    // Test get
-    notes, err := backend.GetNotes(ctx, testItem, session)
-    if err != nil {
-        t.Fatalf("GetNotes: %v", err)
-    }
-    if notes != "test content" {
-        t.Errorf("GetNotes = %q, want %q", notes, "test content")
-    }
-
-    // Cleanup
-    _ = backend.DeleteItem(ctx, testItem, session)
+    // Your tests here...
 }
 ```
 
 ---
 
-## 8. Usage Examples
+## 10. Backend Comparison
 
-### 8.1 Basic Usage
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-    "log"
-
-    "github.com/blackwell-systems/vaultmux"
-)
-
-func main() {
-    ctx := context.Background()
-
-    // Create backend
-    backend, err := vaultmux.New(vaultmux.Config{
-        Backend: vaultmux.BackendPass,
-        Prefix:  "myapp",
-    })
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer backend.Close()
-
-    // Initialize (checks CLI availability)
-    if err := backend.Init(ctx); err != nil {
-        log.Fatal(err)
-    }
-
-    // Authenticate
-    session, err := backend.Authenticate(ctx)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    // Store a secret
-    err = backend.CreateItem(ctx, "API-Key", "sk-secret123", session)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    // Retrieve it
-    secret, err := backend.GetNotes(ctx, "API-Key", session)
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println("Secret:", secret)
-}
-```
-
-### 8.2 With Timeout
-
-```go
-ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-defer cancel()
-
-notes, err := backend.GetNotes(ctx, "SSH-Config", session)
-if err != nil {
-    if ctx.Err() == context.DeadlineExceeded {
-        log.Println("Operation timed out")
-    }
-    return err
-}
-```
-
-### 8.3 Backend Auto-Detection
-
-```go
-// Auto-detect based on available CLIs
-func DetectBackend() vaultmux.BackendType {
-    if _, err := exec.LookPath("bw"); err == nil {
-        return vaultmux.BackendBitwarden
-    }
-    if _, err := exec.LookPath("op"); err == nil {
-        return vaultmux.BackendOnePassword
-    }
-    if _, err := exec.LookPath("pass"); err == nil {
-        return vaultmux.BackendPass
-    }
-    return "" // No backend available
-}
-```
-
-### 8.4 Sync Workflow
-
-```go
-func syncSecrets(ctx context.Context, backend vaultmux.Backend, session vaultmux.Session) error {
-    // Pull latest from server
-    if err := backend.Sync(ctx, session); err != nil {
-        return fmt.Errorf("sync failed: %w", err)
-    }
-
-    // List all items
-    items, err := backend.ListItems(ctx, session)
-    if err != nil {
-        return err
-    }
-
-    for _, item := range items {
-        fmt.Printf("- %s (type: %d)\n", item.Name, item.Type)
-    }
-
-    return nil
-}
-```
-
----
-
-## 9. Backend Comparison
+### 10.1 Feature Matrix
 
 | Feature | Bitwarden | 1Password | pass |
 |---------|-----------|-----------|------|
@@ -815,7 +658,38 @@ func syncSecrets(ctx context.Context, backend vaultmux.Backend, session vaultmux
 | **Free Tier** | Yes | No | Yes (FOSS) |
 | **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) |
 
-### 9.1 When to Use Each
+### 10.2 Implementation Differences
+
+```mermaid
+%%{init: {'theme':'dark', 'themeVariables': { 'primaryColor':'#4a9eff','primaryTextColor':'#e0e0e0','primaryBorderColor':'#4a9eff','lineColor':'#6eb5ff','secondaryColor':'#2d7dd2','tertiaryColor':'#3a3a3a'}}}%%
+graph TB
+    subgraph BW["Bitwarden"]
+        BWSess[Session Token]
+        BWSync[bw sync]
+        BWFolder[Folders by ID]
+    end
+
+    subgraph OP["1Password"]
+        OPSess[Biometric + Session]
+        OPSync[Auto-sync]
+        OPVault[Vaults]
+    end
+
+    subgraph P["pass"]
+        PSess[No Session<br/>GPG agent]
+        PSync[git pull/push]
+        PDir[Directories]
+    end
+
+    Backend[Backend Interface] -.->|implements| BW
+    Backend -.->|implements| OP
+    Backend -.->|implements| P
+
+    style Backend fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
+    style BW,OP,P fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+```
+
+### 10.3 When to Use Each Backend
 
 **Bitwarden:**
 - Team/organization use
@@ -835,103 +709,23 @@ func syncSecrets(ctx context.Context, backend vaultmux.Backend, session vaultmux
 
 ---
 
-## 10. Future Backends
+## Conclusion
 
-### 10.1 Planned
+Vaultmux provides a clean abstraction over multiple secret management backends, allowing applications to switch backends with minimal code changes. The architecture prioritizes simplicity, testability, and reliability by delegating backend-specific complexity to their respective CLIs rather than reimplementing protocols.
 
-| Backend | CLI | Priority | Notes |
-|---------|-----|----------|-------|
-| **HashiCorp Vault** | `vault` | Medium | Enterprise secret management |
-| **AWS Secrets Manager** | `aws` | Low | Cloud-native, AWS-only |
-| **Doppler** | `doppler` | Low | Developer-focused |
-| **Keychain (macOS)** | `security` | Low | macOS-only, no sync |
+**Key Architectural Decisions:**
+1. **Interface-first design** - Clear contracts between layers
+2. **CLI delegation** - Leverage battle-tested implementations
+3. **Session caching** - Balance security and UX
+4. **Context propagation** - Proper cancellation and timeout support
+5. **Type-safe errors** - Clear error handling patterns
 
-### 10.2 Backend Plugin System (Future)
-
-```go
-// Future: Dynamic backend registration
-func init() {
-    vaultmux.RegisterBackend("hashicorp", func(cfg vaultmux.Config) (vaultmux.Backend, error) {
-        return hashicorp.New(cfg.Options)
-    })
-}
-```
+**Extensibility:**
+New backends can be added by implementing the `Backend` interface and registering via `RegisterBackend()` in the package's `init()` function. See [EXTENDING.md](EXTENDING.md) for details.
 
 ---
 
-## Appendix A: CLI Command Reference
-
-### Bitwarden (`bw`)
-
-```bash
-# Status
-bw status                                    # {"status":"locked"}
-
-# Auth
-bw login                                     # Interactive login
-bw unlock --raw                              # Get session token
-
-# Items
-bw get item "name" --session $BW_SESSION     # JSON output
-bw create item "$JSON" --session $BW_SESSION
-bw edit item "$ID" "$JSON" --session $BW_SESSION
-bw delete item "$ID" --session $BW_SESSION
-
-# Sync
-bw sync --session $BW_SESSION
-
-# Folders
-bw list folders --session $BW_SESSION
-bw create folder "$JSON" --session $BW_SESSION
-```
-
-### 1Password (`op`)
-
-```bash
-# Auth
-op account list
-op signin                                    # Returns session token
-
-# Items
-op item get "name" --format json
-op item create --category SecureNote --title "name" notes="content"
-op item edit "name" notes="new content"
-op item delete "name"
-
-# Vaults
-op vault list --format json
-op vault create "name"
-```
-
-### pass
-
-```bash
-# List
-pass                                         # Tree view
-pass ls                                      # List entries
-
-# Items
-pass show "prefix/name"                      # Decrypt and show
-pass insert -m "prefix/name"                 # Create multiline
-pass insert -m -f "prefix/name"              # Update (force)
-pass rm -f "prefix/name"                     # Delete
-
-# Git sync
-pass git pull
-pass git push
-```
-
----
-
-## Appendix B: Security Considerations
-
-1. **Session tokens are sensitive** - Store with mode 0600, clear on lock
-2. **GPG agent passphrase caching** - Configure appropriate timeout
-3. **CLI output may contain secrets** - Don't log full command output
-4. **Context cancellation** - Ensure partial operations are safe
-5. **Concurrent access** - Session refresh needs mutex protection
-
----
-
-*Document Version: 1.0*
-*Last Updated: 2025-12-07*
+**Related Documentation:**
+- [README.md](README.md) - Quick start and usage
+- [EXTENDING.md](EXTENDING.md) - Adding new backends
+- [Go Package Documentation](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)
