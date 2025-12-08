@@ -8,11 +8,11 @@
 go get github.com/blackwell-systems/vaultmux
 ```
 
-- **5 Backends** - Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager
+- **6 Backends** - Bitwarden, 1Password, pass, Windows Credential Manager, AWS, Google Cloud
 - **Zero-Code Switching** - Change backends without modifying application code
 - **Multiple Patterns** - CLI wrappers, native SDKs, OS APIs all through one interface
 - **Type-Safe** - Full Go interfaces with context support
-- **Cross-Platform** - Linux, macOS, Windows, cloud-native AWS integration
+- **Cross-Platform** - Linux, macOS, Windows, cloud-native AWS/GCP integration
 
 [Get Started](#vaultmux)
 [VIEW ON GITHUB](https://github.com/blackwell-systems/vaultmux)

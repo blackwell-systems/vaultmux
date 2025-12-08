@@ -1,17 +1,18 @@
 # Vaultmux Roadmap
 
-> **Current Status:** v0.2.0 - Production-ready with 4 backends (Bitwarden, 1Password, pass, Windows Credential Manager)
+> **Current Status:** v0.4.0 - Production-ready with 5 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager)
 
 This document outlines planned backend integrations and major features for vaultmux.
 
 ---
 
-## Supported Backends (v0.2.0)
+## Supported Backends (v0.4.0)
 
 - **Bitwarden** - Open source, self-hostable (Vaultwarden)
 - **1Password** - Enterprise-grade with biometric auth
 - **pass** - Unix password store (GPG + git)
 - **Windows Credential Manager** - Native Windows integration (v0.2.0)
+- **AWS Secrets Manager** - Cloud-native AWS secret storage (v0.3.0)
 
 ---
 
@@ -97,7 +98,7 @@ This approach allows cross-platform development while ensuring production code i
 ### Cloud Provider Secret Managers
 
 #### AWS Secrets Manager
-**Status:** 🚧 **IN PROGRESS** (v0.3.0)
+**Status:** ✅ **IMPLEMENTED** (v0.3.0)
 **Priority:** High - First SDK-based backend
 
 **Why:**
@@ -308,22 +309,147 @@ AWS Secrets Manager requires AWS account and incurs costs, so we'll use local em
 ---
 
 #### Google Cloud Secret Manager
-**Status:** Under Consideration
-**Priority:** Medium
+**Status:** 🚧 **IN PROGRESS** (v0.4.0)
+**Priority:** High - Second SDK-based backend, completes cloud trifecta
 
 **Why:**
-- Native GCP integration
-- Automatic encryption at rest
-- IAM-based access control
+- Native GCP integration for Google Cloud deployments
+- Automatic encryption at rest with Google-managed keys
+- IAM-based access control with fine-grained permissions
+- Simpler API than AWS (cleaner SDK design)
+- Automatic secret versioning on every update
+- First 6 secret versions free per month (~$0.06/version thereafter)
+- Validates vaultmux interface works across multiple cloud SDKs
 
 **Implementation:**
-- Use Google Cloud SDK for Go
-- Session: Service account or ADC (Application Default Credentials)
-- Folders: Use labels or naming conventions
+- Use Google Cloud Go SDK: `cloud.google.com/go/secretmanager/apiv1`
+- Session: Application Default Credentials (ADC) - service account JSON, gcloud CLI, or GCE/GKE metadata
+- Item naming: Secret name with prefix (e.g., `vaultmux-item-name`)
+- Folders: Not supported natively (could use labels in future)
+- Project ID: Required for all operations (specified in config)
+
+**API Mapping:**
+```go
+GetItem()    → AccessSecretVersion(latest) + GetSecret(metadata)
+CreateItem() → CreateSecret() + AddSecretVersion()
+UpdateItem() → AddSecretVersion() (creates new version automatically)
+DeleteItem() → DeleteSecret()
+ListItems()  → ListSecrets() with prefix filter
+```
+
+**Challenges:**
+- Requires GCP project and IAM setup (no local emulator like AWS LocalStack)
+- Not free for production (but cheap: first 6 versions free, $0.06/version after)
+- Two-step secret creation: CreateSecret (metadata) then AddSecretVersion (content)
+- No native folder/vault concept (flat namespace per project)
+- Deleted secrets are immediate (no recovery period like AWS)
 
 **Use Case:**
-- GCP-deployed applications
-- Google Workspace organizations
+```go
+backend, _ := vaultmux.New(vaultmux.Config{
+    Backend: vaultmux.BackendGCPSecretManager,
+    Options: map[string]string{
+        "project_id": "my-gcp-project",
+        "prefix":     "myapp-",
+    },
+})
+// Uses ADC from GOOGLE_APPLICATION_CREDENTIALS or gcloud CLI
+```
+
+**Testing Strategy:**
+
+Unlike AWS (LocalStack) or Windows (WSL2), GCP Secret Manager has no good local emulator. Testing approach:
+
+1. **Unit Tests (Primary - No GCP Required):**
+   - Test configuration, error handling, interface compliance
+   - Mock GCP SDK behavior for fast TDD
+   - No GCP project or credentials needed
+
+   ```go
+   func TestNew(t *testing.T) {
+       // Test project_id validation, prefix defaults, etc.
+   }
+
+   func TestBackend_InterfaceCompliance(t *testing.T) {
+       var _ vaultmux.Backend = (*Backend)(nil)
+   }
+   ```
+
+2. **Integration Tests (Skip Without Credentials):**
+   - Full CRUD tests against real GCP project
+   - Skipped gracefully when GCP_PROJECT_ID not set
+   - Can use GCP free tier (first 6 secrets free)
+
+   **Setup:**
+   ```bash
+   # Create GCP project and enable Secret Manager API
+   gcloud services enable secretmanager.googleapis.com
+
+   # Create service account with permissions
+   gcloud iam service-accounts create vaultmux-test
+
+   # Grant secretmanager.admin role
+   gcloud projects add-iam-policy-binding PROJECT_ID \
+     --member="serviceAccount:vaultmux-test@PROJECT_ID.iam.gserviceaccount.com" \
+     --role="roles/secretmanager.admin"
+
+   # Download service account key
+   gcloud iam service-accounts keys create sa-key.json \
+     --iam-account=vaultmux-test@PROJECT_ID.iam.gserviceaccount.com
+
+   # Run integration tests
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa-key.json
+   export GCP_PROJECT_ID=your-project-id
+   go test -v ./backends/gcpsecrets/
+   ```
+
+   **In Tests:**
+   ```go
+   func TestIntegration(t *testing.T) {
+       projectID := os.Getenv("GCP_PROJECT_ID")
+       if projectID == "" {
+           t.Skip("GCP_PROJECT_ID not set - skipping integration tests")
+       }
+
+       // Full CRUD testing against real GCP
+   }
+   ```
+
+3. **GitHub Actions (Optional - Real GCP):**
+   - Use GCP service account key as GitHub secret
+   - Run integration tests on CI
+   - Clean up secrets after tests
+   - Only run on main branch to minimize API costs
+
+**IAM Permissions Needed (Production):**
+```json
+{
+  "roles": [
+    "roles/secretmanager.admin"
+  ],
+  "OR_minimum_permissions": [
+    "secretmanager.secrets.create",
+    "secretmanager.secrets.get",
+    "secretmanager.secrets.list",
+    "secretmanager.secrets.delete",
+    "secretmanager.versions.add",
+    "secretmanager.versions.access"
+  ]
+}
+```
+
+**Advantages:**
+- Simpler API than AWS (fewer methods, cleaner design)
+- Excellent Go SDK quality (Google's official SDKs are top-tier)
+- Built-in versioning (no separate version management)
+- Fast iteration with real GCP free tier
+
+**Comparison to AWS Secrets Manager:**
+- **Simpler**: 5 core methods vs 7 for AWS
+- **Faster to implement**: ~3-4 days vs ~5 days for AWS
+- **Better SDK**: Google's Go SDKs are cleaner than AWS v2
+- **No local emulator**: Must use real GCP (but free tier available)
+- **Two-step creation**: CreateSecret + AddSecretVersion vs single AWS CreateSecret
 
 ---
 
@@ -462,6 +588,7 @@ AWS Secrets Manager requires AWS account and incurs costs, so we'll use local em
 | **pass** | No | Yes (Unix) | Yes | Yes | GPG Agent | Unix power users |
 | **Win Credential Mgr** | Yes | No | N/A | Yes | OS Auth | Windows devs |
 | **AWS Secrets Mgr** | No | Yes | No | No ($) | IAM | AWS deployments |
+| **GCP Secret Mgr** | No | Yes | No | Partial ($) | Service Account | GCP deployments |
 | **Azure Key Vault** | No | Yes | No | No ($) | Azure AD | Azure deployments |
 | **HashiCorp Vault** | No | Yes | Yes | Yes (OSS) | Token | Enterprise infra |
 | **KeePassXC** | No | Yes | Yes | Yes | Master Password | Privacy-focused |
@@ -475,23 +602,28 @@ AWS Secrets Manager requires AWS account and incurs costs, so we'll use local em
 2. Documentation improvements (Docsify site, architecture diagrams) ✅
 3. Test coverage improvements (98.5% core coverage) ✅
 
-### v0.3.0 🚧 IN PROGRESS
-1. **AWS Secrets Manager** - First SDK-based backend (validates interface universality)
-2. LocalStack/moto testing infrastructure
-3. IAM credential handling patterns
+### v0.3.0 ✅ RELEASED
+1. **AWS Secrets Manager** - First SDK-based backend ✅
+2. LocalStack testing infrastructure ✅
+3. IAM credential handling patterns ✅
 
-### v0.4.0
-1. **Azure Key Vault** - Azure ecosystem support
-2. **HashiCorp Vault** - Enterprise option
+### v0.4.0 🚧 IN PROGRESS
+1. **Google Cloud Secret Manager** - Second SDK-based backend, completes AWS/GCP cloud pair
+2. Application Default Credentials (ADC) authentication patterns
+3. Real GCP integration testing (no local emulator available)
 
 ### v0.5.0
+1. **Azure Key Vault** - Completes big three cloud providers
+2. **HashiCorp Vault** - Enterprise option
+
+### v0.6.0
 1. **KeePassXC** - Open source file-based option
-2. **Google Cloud Secret Manager** - GCP integration
+2. Additional enterprise managers (Keeper, Doppler)
 
 ### Future
-- Additional cloud providers (GCP)
-- Additional enterprise managers (Keeper, Doppler)
+- Additional enterprise managers
 - Consumer managers (if demand exists)
+- Advanced features (secret rotation, versioning APIs)
 
 ---
 
@@ -533,5 +665,5 @@ Have a backend you'd like to see supported? [Open an issue](https://github.com/b
 
 ---
 
-**Last Updated:** 2025-12-07
-**Current Version:** v0.2.0
+**Last Updated:** 2025-12-08
+**Current Version:** v0.4.0 (in progress)

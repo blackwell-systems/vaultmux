@@ -7,6 +7,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-08
+
+### Added
+
+- **Google Cloud Secret Manager Backend** - Second SDK-based backend (validates cloud provider universality)
+  - Native Google Cloud Go SDK integration (`cloud.google.com/go/secretmanager/apiv1`)
+  - Application Default Credentials (ADC) support (service account JSON, gcloud CLI, GCE/GKE metadata)
+  - GCP project ID-based session management
+  - Secret name prefixing for namespace isolation (`myapp-secret-name`)
+  - Automatic secret versioning on every update (built-in to GCP)
+  - Two-step secret creation (CreateSecret for metadata + AddSecretVersion for content)
+  - gRPC error code mapping (codes.NotFound, codes.AlreadyExists, etc.)
+  - Iterator-based pagination for secret listing
+  - Label-based secret organization (`vaultmux:true`, `prefix:<value>`)
+  - Custom endpoint support for testing (fake-gcp-server compatible)
+  - Immediate deletion (no recovery period like AWS)
+  - Comprehensive error mapping (GCP gRPC errors → vaultmux errors)
+  - No session management complexity (credentials are long-lived or SDK-managed)
+- **Real GCP Testing Strategy** - First backend without local emulator
+  - Unit tests with no GCP credentials required (configuration, interface compliance)
+  - Integration tests skip gracefully when GCP_PROJECT_ID not set
+  - Real GCP free tier testing (first 6 secret versions free)
+  - Service account IAM permission documentation
+  - GitHub Actions CI workflow examples with real GCP
+- **GCP Implementation Documentation**
+  - ROADMAP.md: Comprehensive GCP section with testing strategy
+  - ROADMAP.md: API mapping (GetItem → AccessSecretVersion + GetSecret)
+  - ROADMAP.md: IAM permissions templates (secretmanager.admin role)
+  - ROADMAP.md: Cost analysis (~$0.06/secret version after free tier)
+  - ROADMAP.md: Comparison to AWS (simpler API, cleaner SDK, no local emulator)
+
+### Changed
+
+- **go.mod** - Added Google Cloud SDK dependencies
+  - `cloud.google.com/go/secretmanager` v1.16.0
+  - `google.golang.org/api` v0.257.0
+  - `google.golang.org/grpc` v1.77.0
+  - Go version upgraded from 1.23 to 1.24.0 (GCP SDK requirement)
+- **README.md** - Updated for 6 backends
+  - Updated tagline from "Unified interface for multiple secret management backends" to "The definitive Go library for multi-vault secret management"
+  - Updated intro paragraph to mention all 5 backends explicitly
+  - Related Projects section restructured (Supported Backends + Similar Projects)
+  - Added detailed backend descriptions in Related Projects
+- **docs/_coverpage.md** - Updated for 5 backends
+  - New tagline: "The definitive Go library for multi-vault secret management"
+  - Updated feature list to show 5 backends
+  - Emphasized multiple integration patterns (CLI, SDK, OS APIs)
+- **ROADMAP.md** - GCP Secret Manager marked "IN PROGRESS (v0.4.0)"
+  - Current status updated from v0.2.0 to v0.4.0
+  - Added GCP to supported backends list
+  - AWS marked "IMPLEMENTED (v0.3.0)"
+  - Comprehensive GCP testing strategy (no emulator, real GCP approach)
+  - API mapping documentation
+  - IAM permissions JSON policy template
+  - Comparison to AWS implementation
+  - Updated backend feature matrix with GCP row
+  - Updated implementation priority (v0.3.0 released, v0.4.0 in progress)
+  - Last updated date: 2025-12-08
+- **factory.go** - Added `BackendGCPSecretManager` constant
+  - Updated Config comment to include "gcpsecrets"
+  - Maintains backward compatibility
+
+### Technical Details
+
+- **Pattern Validation**: Second SDK-based backend (after AWS) confirms interface universality across clouds
+- **Session Semantics**: GCP project ID + service account credentials validate flexible session patterns
+- **Error Handling**: GCP gRPC status codes map cleanly to vaultmux standard errors
+- **Testing Strategy**: Real GCP testing (no emulator) with graceful skip when credentials unavailable
+- **Integration Type**: Native SDK (not CLI subprocess) - same pattern as AWS
+- **API Simplicity**: GCP SDK is notably cleaner than AWS v2 (fewer methods, better design)
+
+### Developer Experience
+
+- **Local Testing**: Unit tests run with no GCP setup required
+- **Integration Testing**: Real GCP free tier enables zero-cost testing (first 6 versions free)
+- **Fast Tests**: GCP API is fast (~50-100ms latency)
+- **Better SDK**: Google's Go SDKs are excellent quality (cleaner than AWS)
+- **No Emulator Needed**: GCP free tier eliminates need for local emulation
+
+### Comparison to AWS Implementation
+
+- **Simpler API**: 5 core operations vs AWS's more complex API surface
+- **Cleaner SDK**: Google's SDK design is more intuitive than AWS v2
+- **Built-in Versioning**: GCP versions automatically on update (no separate API)
+- **Two-Step Creation**: CreateSecret + AddSecretVersion (different from AWS single CreateSecret)
+- **No Local Emulator**: Must use real GCP (but free tier makes this viable)
+- **Faster Implementation**: ~3-4 days vs ~5 days for AWS (simpler patterns)
+
 ## [0.3.0] - 2025-12-07
 
 ### Added
@@ -206,7 +294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/blackwell-systems/vaultmux/releases/tag/v0.1.0

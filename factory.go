@@ -19,11 +19,13 @@ const (
 	BackendWindowsCredentialManager BackendType = "wincred"
 	// BackendAWSSecretsManager represents the AWS Secrets Manager backend.
 	BackendAWSSecretsManager BackendType = "awssecrets"
+	// BackendGCPSecretManager represents the Google Cloud Secret Manager backend.
+	BackendGCPSecretManager BackendType = "gcpsecrets"
 )
 
 // Config holds vault configuration.
 type Config struct {
-	// Backend type: "bitwarden", "1password", "pass", "wincred", "awssecrets"
+	// Backend type: "bitwarden", "1password", "pass", "wincred", "awssecrets", "gcpsecrets"
 	Backend BackendType
 
 	// Pass-specific

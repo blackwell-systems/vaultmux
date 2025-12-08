@@ -10,12 +10,12 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Sponsor](https://img.shields.io/badge/Sponsor-Buy%20Me%20a%20Coffee-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/blackwellsystems)
 
-Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, and AWS Secrets Manager with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
+Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, and Google Cloud Secret Manager with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
 
 ## Features
 
 - **Unified API** - Single interface works with any backend
-- **Minimal Dependencies** - Core has zero dependencies; AWS backend uses AWS SDK v2
+- **Minimal Dependencies** - Core has zero dependencies; AWS/GCP backends use official SDKs
 - **Context Support** - All operations accept `context.Context` for cancellation/timeout
 - **Session Caching** - Avoid repeated authentication prompts
 - **Type-Safe** - Full static typing with Go interfaces
@@ -30,6 +30,7 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 | **pass** | CLI (`pass` + `gpg`) | Git-based, directories, offline | Unix |
 | **Windows Credential Manager** | PowerShell | OS-level auth, Windows Hello | Windows |
 | **AWS Secrets Manager** | SDK (aws-sdk-go-v2) | IAM auth, versioning, rotation | All |
+| **Google Cloud Secret Manager** | SDK (cloud.google.com/go) | ADC auth, auto-versioning, labels | All |
 
 ## Installation
 
@@ -93,7 +94,7 @@ func main() {
 
 ```go
 config := vaultmux.Config{
-    // Backend type: "bitwarden", "1password", "pass", "wincred", or "awssecrets"
+    // Backend type: "bitwarden", "1password", "pass", "wincred", "awssecrets", or "gcpsecrets"
     Backend: vaultmux.BackendPass,
 
     // Pass-specific
@@ -110,6 +111,10 @@ config := vaultmux.Config{
         "region":   "us-west-2",              // AWS region
         "prefix":   "myapp/",                 // Secret name prefix
         "endpoint": "http://localhost:4566", // LocalStack endpoint (for testing)
+
+        // Google Cloud Secret Manager:
+        "project_id": "my-gcp-project",      // GCP project ID (required)
+        "prefix":     "myapp-",              // Secret name prefix
     },
 }
 
