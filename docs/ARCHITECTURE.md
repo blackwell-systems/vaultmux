@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. It abstracts away the differences between Bitwarden, 1Password, pass (Unix password manager), Windows Credential Manager, and AWS Secrets Manager, allowing applications to work with any supported backend through a single API.
+Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. It abstracts away the differences between Bitwarden, 1Password, pass (Unix password manager), Windows Credential Manager, AWS Secrets Manager, and Google Cloud Secret Manager, allowing applications to work with any supported backend through a single API.
 
 **Key Features:**
 - Unified `Backend` interface for all secret managers
@@ -638,21 +638,21 @@ func TestMyCode(t *testing.T) {
 
 ### 10.1 Feature Matrix
 
-| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager |
-|---------|-----------|-----------|------|------------------|---------------------|
-| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) |
-| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello | IAM credentials |
-| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM) |
-| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) | Always synchronized |
-| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) | No (requires AWS API) |
-| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) | Prefix + tags |
-| **Sharing** | Organizations | Vaults | Git repos | Windows user account | IAM policies |
-| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) |
-| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) | No (AWS only) |
-| **Platform** | All | All | Unix | Windows only | All |
-| **Versioning** | No | No | Via git | No | Automatic (built-in) |
-| **Rotation** | Manual | Manual | Manual | Manual | Automatic (configurable) |
-| **Audit Logging** | Self-hosted only | Enterprise only | Via git log | No | Built-in (CloudTrail) |
+| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager | GCP Secret Manager |
+|---------|-----------|-----------|------|------------------|---------------------|--------------------|
+| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) | SDK (cloud.google.com/go) |
+| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello | IAM credentials | Service Account / ADC |
+| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM) | Long-lived (SA) |
+| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) | Always synchronized | Always synchronized |
+| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) | No (requires AWS API) | No (requires GCP API) |
+| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) | Prefix + tags | Prefix + labels |
+| **Sharing** | Organizations | Vaults | Git repos | Windows user account | IAM policies | IAM policies |
+| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) | Partial (first 6 versions free) |
+| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) | No (AWS only) | No (GCP only) |
+| **Platform** | All | All | Unix | Windows only | All | All |
+| **Versioning** | No | No | Via git | No | Automatic (built-in) | Automatic (built-in) |
+| **Rotation** | Manual | Manual | Manual | Manual | Automatic (configurable) | Manual (future: automatic) |
+| **Audit Logging** | Self-hosted only | Enterprise only | Via git log | No | Built-in (CloudTrail) | Built-in (Cloud Audit Logs) |
 
 ### 10.2 Implementation Differences
 
@@ -689,14 +689,22 @@ graph TB
         AWSVer[Automatic versioning]
     end
 
+    subgraph GCP["GCP Secret Manager"]
+        GCPSess[Service Account<br/>ADC]
+        GCPSync[Always synchronized]
+        GCPFolder[Prefix + Labels]
+        GCPVer[Automatic versioning]
+    end
+
     Backend[Backend Interface] -.->|implements| BW
     Backend -.->|implements| OP
     Backend -.->|implements| P
     Backend -.->|implements| WC
     Backend -.->|implements| AWS
+    Backend -.->|implements| GCP
 
     style Backend fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
-    style BW,OP,P,WC,AWS fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style BW,OP,P,WC,AWS,GCP fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
 ### 10.3 When to Use Each Backend
@@ -734,11 +742,22 @@ graph TB
 - Integration with AWS services (RDS, Redshift, DocumentDB)
 - Teams already invested in AWS ecosystem
 
+**Google Cloud Secret Manager:**
+- Applications running on GCP (Compute Engine, GKE, Cloud Run, Cloud Functions)
+- Simpler API surface preferred over AWS (cleaner SDK design)
+- Service account-based authentication (Application Default Credentials)
+- IAM-based access control with fine-grained permissions
+- Audit logging requirements (Cloud Audit Logs integration)
+- Automatic versioning on every update (built-in, no configuration)
+- Integration with GCP services (Cloud SQL, GKE Workload Identity)
+- Teams already invested in Google Cloud ecosystem
+- Cost-conscious projects (first 6 secret versions free per month)
+
 ---
 
 ## Conclusion
 
-Vaultmux provides a clean abstraction over multiple secret management backends, allowing applications to switch backends with minimal code changes. The architecture prioritizes simplicity, testability, and reliability by delegating backend-specific complexity to their respective CLIs rather than reimplementing protocols.
+Vaultmux provides a clean abstraction over multiple secret management backends, allowing applications to switch backends with minimal code changes. The architecture prioritizes simplicity, testability, and reliability by delegating backend-specific complexity to their respective CLIs or native SDKs rather than reimplementing protocols.
 
 **Key Architectural Decisions:**
 1. **Interface-first design** - Clear contracts between layers

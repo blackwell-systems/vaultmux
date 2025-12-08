@@ -254,7 +254,7 @@ VAULTMUX_TEST_1PASSWORD=1 go test -tags=integration ./...
 
 ## Architecture
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed design documentation.
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
 
 **Key Design Principles:**
 
