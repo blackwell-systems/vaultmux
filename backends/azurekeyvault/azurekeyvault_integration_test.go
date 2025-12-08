@@ -37,12 +37,13 @@ func TestIntegration(t *testing.T) {
 	defer func() { _ = backend.Close() }()
 
 	// Initialize
-	if err := backend.Init(ctx); err != nil {
-		t.Fatalf("Init() error = %v", err)
+	if initErr := backend.Init(ctx); initErr != nil {
+		t.Fatalf("Init() error = %v", initErr)
 	}
 
 	// Authenticate
-	session, err := backend.Authenticate(ctx)
+	var session vaultmux.Session
+	session, err = backend.Authenticate(ctx)
 	if err != nil {
 		t.Fatalf("Authenticate() error = %v", err)
 	}
@@ -224,11 +225,12 @@ func TestIntegration_Pagination(t *testing.T) {
 	}
 	defer func() { _ = backend.Close() }()
 
-	if err := backend.Init(ctx); err != nil {
-		t.Fatalf("Init() error = %v", err)
+	if initErr := backend.Init(ctx); initErr != nil {
+		t.Fatalf("Init() error = %v", initErr)
 	}
 
-	session, err := backend.Authenticate(ctx)
+	var session vaultmux.Session
+	session, err = backend.Authenticate(ctx)
 	if err != nil {
 		t.Fatalf("Authenticate() error = %v", err)
 	}
