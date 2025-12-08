@@ -1,16 +1,33 @@
 // Package vaultmux provides a unified interface for interacting with multiple
-// secret management backends including Bitwarden, 1Password, and pass.
+// secret management backends including Bitwarden, 1Password, pass (Unix password
+// manager), Windows Credential Manager, and AWS Secrets Manager.
+//
+// The library supports three integration patterns:
+//   - CLI backends: Bitwarden (bw), 1Password (op), pass
+//   - OS-native: Windows Credential Manager (PowerShell)
+//   - SDK-based: AWS Secrets Manager (aws-sdk-go-v2)
 //
 // Basic usage:
 //
 //	import (
 //	    "github.com/blackwell-systems/vaultmux"
 //	    _ "github.com/blackwell-systems/vaultmux/backends/pass"
+//	    _ "github.com/blackwell-systems/vaultmux/backends/awssecrets"
 //	)
 //
+//	// Using pass backend
 //	backend, err := vaultmux.New(vaultmux.Config{
 //	    Backend: vaultmux.BackendPass,
 //	    Prefix:  "myapp",
+//	})
+//
+//	// Using AWS Secrets Manager
+//	backend, err := vaultmux.New(vaultmux.Config{
+//	    Backend: vaultmux.BackendAWSSecretsManager,
+//	    Options: map[string]string{
+//	        "region": "us-west-2",
+//	        "prefix": "myapp/",
+//	    },
 //	})
 //
 // See the package documentation for more examples.
@@ -23,7 +40,7 @@ import (
 )
 
 // Backend represents a secret storage backend.
-// Implementations: Bitwarden, 1Password, pass
+// Implementations: Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager
 type Backend interface {
 	// Metadata
 	Name() string

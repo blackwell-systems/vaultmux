@@ -9,14 +9,15 @@
 
 ## Executive Summary
 
-Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. It abstracts away the differences between Bitwarden, 1Password, and pass (the standard Unix password manager), allowing applications to work with any supported backend through a single API.
+Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. It abstracts away the differences between Bitwarden, 1Password, pass (Unix password manager), Windows Credential Manager, and AWS Secrets Manager, allowing applications to work with any supported backend through a single API.
 
 **Key Features:**
 - Unified `Backend` interface for all secret managers
 - Session management with caching and refresh
 - Context-aware operations with timeout support
 - Location/folder management across backends
-- Zero external dependencies (only stdlib + backend CLIs)
+- Multiple integration patterns: CLI wrappers, native SDKs, OS APIs
+- Minimal dependencies (stdlib + backend-specific SDKs only)
 
 ---
 
@@ -42,7 +43,7 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 | Goal | Description |
 |------|-------------|
 | **Unified API** | Single interface works with any backend |
-| **Minimal Dependencies** | Only Go stdlib; backends use their own CLIs |
+| **Minimal Dependencies** | Core has zero dependencies; backends add only what they need (CLIs or SDKs) |
 | **Context Support** | All operations accept `context.Context` for cancellation/timeout |
 | **Session Caching** | Avoid repeated authentication prompts |
 | **Testability** | Mock backend for unit testing |
@@ -58,10 +59,11 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 
 ### 1.3 Design Principles
 
-1. **Backend CLIs are the source of truth** - We shell out to `bw`, `op`, `pass` rather than reimplementing their protocols
+1. **Backends integrate natively** - CLI backends shell out to `bw`, `op`, `pass`; SDK backends use native clients (AWS SDK, Azure SDK)
 2. **Fail fast, fail clearly** - Explicit errors over silent failures
 3. **No global state** - All state lives in Backend/Session structs
 4. **Functional options** - Extensible configuration without breaking changes
+5. **Interface universality** - Same `Backend` interface works for CLI wrappers, OS APIs, and SDK clients
 
 ---
 
@@ -636,18 +638,21 @@ func TestMyCode(t *testing.T) {
 
 ### 10.1 Feature Matrix
 
-| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr |
-|---------|-----------|-----------|------|------------------|
-| **CLI Tool** | `bw` | `op` | `pass` | PowerShell |
-| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello |
-| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed |
-| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) |
-| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) |
-| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) |
-| **Sharing** | Organizations | Vaults | Git repos | Windows user account |
-| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) |
-| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) |
-| **Platform** | All | All | Unix | Windows only |
+| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager |
+|---------|-----------|-----------|------|------------------|---------------------|
+| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) |
+| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello | IAM credentials |
+| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM) |
+| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) | Always synchronized |
+| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) | No (requires AWS API) |
+| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) | Prefix + tags |
+| **Sharing** | Organizations | Vaults | Git repos | Windows user account | IAM policies |
+| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) |
+| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) | No (AWS only) |
+| **Platform** | All | All | Unix | Windows only | All |
+| **Versioning** | No | No | Via git | No | Automatic (built-in) |
+| **Rotation** | Manual | Manual | Manual | Manual | Automatic (configurable) |
+| **Audit Logging** | Self-hosted only | Enterprise only | Via git log | No | Built-in (CloudTrail) |
 
 ### 10.2 Implementation Differences
 
@@ -677,13 +682,21 @@ graph TB
         WCFolder[No folders]
     end
 
+    subgraph AWS["AWS Secrets Manager"]
+        AWSSess[IAM Credentials<br/>SDK-managed]
+        AWSSync[Always synchronized]
+        AWSFolder[Prefix + Tags]
+        AWSVer[Automatic versioning]
+    end
+
     Backend[Backend Interface] -.->|implements| BW
     Backend -.->|implements| OP
     Backend -.->|implements| P
     Backend -.->|implements| WC
+    Backend -.->|implements| AWS
 
     style Backend fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
-    style BW,OP,P,WC fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style BW,OP,P,WC,AWS fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
 ### 10.3 When to Use Each Backend
@@ -710,6 +723,16 @@ graph TB
 - Windows Hello / biometric auth
 - Single-machine secrets (no sync needed)
 - Quick setup for Windows-only projects
+
+**AWS Secrets Manager:**
+- Applications running on AWS (EC2, ECS, Lambda, EKS)
+- Automatic secret rotation needed (databases, API keys)
+- IAM-based access control and fine-grained permissions
+- Audit logging requirements (CloudTrail integration)
+- Multi-region replication and disaster recovery
+- Versioning and rollback capabilities
+- Integration with AWS services (RDS, Redshift, DocumentDB)
+- Teams already invested in AWS ecosystem
 
 ---
 

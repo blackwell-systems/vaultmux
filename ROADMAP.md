@@ -1,16 +1,17 @@
 # Vaultmux Roadmap
 
-> **Current Status:** v0.1.0 - Production-ready with 3 backends (Bitwarden, 1Password, pass)
+> **Current Status:** v0.2.0 - Production-ready with 4 backends (Bitwarden, 1Password, pass, Windows Credential Manager)
 
 This document outlines planned backend integrations and major features for vaultmux.
 
 ---
 
-## Supported Backends (v0.1.0)
+## Supported Backends (v0.2.0)
 
 - **Bitwarden** - Open source, self-hostable (Vaultwarden)
 - **1Password** - Enterprise-grade with biometric auth
 - **pass** - Unix password store (GPG + git)
+- **Windows Credential Manager** - Native Windows integration (v0.2.0)
 
 ---
 
@@ -96,28 +97,186 @@ This approach allows cross-platform development while ensuring production code i
 ### Cloud Provider Secret Managers
 
 #### AWS Secrets Manager
-**Status:** Under Consideration
-**Priority:** Medium-High
+**Status:** 🚧 **IN PROGRESS** (v0.3.0)
+**Priority:** High - First SDK-based backend
 
 **Why:**
 - De facto standard for AWS deployments
-- Automatic rotation, audit logging
+- Automatic rotation, audit logging, versioning
 - Integration with IAM roles and permissions
-- Pay-per-use pricing
+- Pay-per-use pricing (~$0.40/secret/month + $0.05/10k API calls)
+- Validates vaultmux interface works with SDKs (not just CLI wrappers)
 
 **Implementation:**
-- Use AWS SDK for Go v2
-- Session: IAM credentials (from env, profile, or EC2 instance role)
-- Folders: Use tags or secret name prefixes
+- Use AWS SDK for Go v2: `github.com/aws/aws-sdk-go-v2/service/secretsmanager`
+- Session: IAM credentials (from env vars, shared config, or EC2/ECS instance role)
+- Item naming: ARN-based or secret name with prefix
+- Folders: Use tags (`vaultmux:location=folder-name`) or path prefixes (`prefix/item-name`)
+- Region: Configurable, defaults to `AWS_REGION` env var or `us-east-1`
+
+**API Mapping:**
+```go
+GetItem()    → secretsmanager.GetSecretValue()
+CreateItem() → secretsmanager.CreateSecret()
+UpdateItem() → secretsmanager.PutSecretValue()
+DeleteItem() → secretsmanager.DeleteSecret()
+ListItems()  → secretsmanager.ListSecrets() with filters
+```
 
 **Challenges:**
-- Requires AWS account and IAM setup
-- Not free (though cheap for small usage)
-- Latency for API calls
+- Requires AWS account and IAM setup (solved via localstack for testing)
+- Not free for production (but cheap: ~$0.40/secret/month)
+- API latency (~100-300ms per call)
+- Secret names must be unique within region
+- Deleted secrets remain in "pending deletion" state for 7-30 days
 
 **Use Case:**
-- Applications running on AWS (EC2, ECS, Lambda)
-- Teams already using AWS infrastructure
+```go
+backend, _ := vaultmux.New(vaultmux.Config{
+    Backend: vaultmux.BackendAWSSecretsManager,
+    Options: map[string]string{
+        "region": "us-west-2",
+        "prefix": "myapp/",
+    },
+})
+// Uses IAM credentials from environment
+```
+
+**Testing Strategy:**
+
+AWS Secrets Manager requires AWS account and incurs costs, so we'll use local emulation for development:
+
+1. **LocalStack (Primary Testing - Docker-based):**
+   - Full AWS service emulation including Secrets Manager
+   - Free tier supports all Secrets Manager operations
+   - Runs locally via Docker container
+
+   **Setup:**
+   ```bash
+   # Install localstack
+   pip install localstack
+
+   # Start localstack with Secrets Manager
+   localstack start -d
+
+   # Or use Docker directly
+   docker run --rm -d \
+     -p 4566:4566 \
+     -e SERVICES=secretsmanager \
+     localstack/localstack
+
+   # Configure AWS CLI to use localstack
+   export AWS_ENDPOINT_URL=http://localhost:4566
+   export AWS_ACCESS_KEY_ID=test
+   export AWS_SECRET_ACCESS_KEY=test
+   export AWS_REGION=us-east-1
+
+   # Test connection
+   aws secretsmanager list-secrets --endpoint-url http://localhost:4566
+   ```
+
+   **In Tests:**
+   ```go
+   // backends/awssecrets/awssecrets_test.go
+   func TestWithLocalStack(t *testing.T) {
+       if os.Getenv("LOCALSTACK_ENDPOINT") == "" {
+           t.Skip("LOCALSTACK_ENDPOINT not set")
+       }
+
+       backend, _ := New(map[string]string{
+           "endpoint": os.Getenv("LOCALSTACK_ENDPOINT"), // http://localhost:4566
+           "region":   "us-east-1",
+       }, "")
+
+       // Full CRUD testing against local AWS
+   }
+   ```
+
+2. **Moto (Python Mock - Alternative):**
+   - Python library that mocks AWS services
+   - Lighter weight than localstack
+   - Can be used as pytest fixture or standalone server
+
+   **Setup:**
+   ```bash
+   # Install moto
+   pip install 'moto[server,secretsmanager]'
+
+   # Start moto server
+   moto_server secretsmanager -p 5000
+
+   # Configure endpoint
+   export AWS_ENDPOINT_URL=http://localhost:5000
+   ```
+
+   **Use Case:** Python-heavy teams or CI environments where localstack is too heavy
+
+3. **AWS SDK Mocking (Unit Tests):**
+   - Mock AWS SDK calls directly in Go tests
+   - Fast, no external dependencies
+   - Limited to SDK behavior testing
+
+   ```go
+   // Use aws-sdk-go-v2 middleware for mocking
+   type mockSecretsManager struct {
+       secrets map[string]string
+   }
+
+   func (m *mockSecretsManager) GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
+       // Return mocked response
+   }
+   ```
+
+4. **GitHub Actions with LocalStack:**
+   ```yaml
+   - name: Start LocalStack
+     run: |
+       docker run -d -p 4566:4566 -e SERVICES=secretsmanager localstack/localstack
+       sleep 10  # Wait for LocalStack to be ready
+
+   - name: Run AWS Secrets Manager tests
+     env:
+       LOCALSTACK_ENDPOINT: http://localhost:4566
+     run: go test -v ./backends/awssecrets/...
+   ```
+
+5. **Optional: Real AWS Testing (CI only):**
+   - Use AWS free tier for integration tests in CI
+   - Requires AWS credentials as GitHub secrets
+   - Clean up secrets after tests
+   - Only run on main branch to minimize costs
+
+**Development Workflow:**
+- Local TDD: Use mocked AWS SDK (fast, no setup)
+- Integration testing: LocalStack via Docker (comprehensive)
+- CI/CD: LocalStack in GitHub Actions (automated)
+- Optional: Real AWS testing for final validation (pre-release only)
+
+**IAM Permissions Needed (Production):**
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "secretsmanager:GetSecretValue",
+      "secretsmanager:CreateSecret",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:DeleteSecret",
+      "secretsmanager:ListSecrets",
+      "secretsmanager:TagResource"
+    ],
+    "Resource": "*"
+  }]
+}
+```
+
+**Advantages of This Testing Approach:**
+- Zero AWS costs for development
+- Full API coverage testing
+- Fast iteration (localstack starts in seconds)
+- Identical API to real AWS
+- No manual AWS account setup required for contributors
 
 ---
 
@@ -311,18 +470,23 @@ This approach allows cross-platform development while ensuring production code i
 
 ## Implementation Priority
 
-### v0.2.0 (Next Release)
-1. **Windows Credential Manager** - Address Windows support gap
-2. Documentation improvements
-3. Integration testing with real CLIs
+### v0.2.0 ✅ RELEASED
+1. **Windows Credential Manager** - Native Windows support ✅
+2. Documentation improvements (Docsify site, architecture diagrams) ✅
+3. Test coverage improvements (98.5% core coverage) ✅
 
-### v0.3.0
-1. **AWS Secrets Manager** - Cloud-native option
-2. **Azure Key Vault** - Azure ecosystem support
+### v0.3.0 🚧 IN PROGRESS
+1. **AWS Secrets Manager** - First SDK-based backend (validates interface universality)
+2. LocalStack/moto testing infrastructure
+3. IAM credential handling patterns
 
 ### v0.4.0
-1. **HashiCorp Vault** - Enterprise option
-2. **KeePassXC** - Open source file-based option
+1. **Azure Key Vault** - Azure ecosystem support
+2. **HashiCorp Vault** - Enterprise option
+
+### v0.5.0
+1. **KeePassXC** - Open source file-based option
+2. **Google Cloud Secret Manager** - GCP integration
 
 ### Future
 - Additional cloud providers (GCP)
@@ -370,4 +534,4 @@ Have a backend you'd like to see supported? [Open an issue](https://github.com/b
 ---
 
 **Last Updated:** 2025-12-07
-**Current Version:** v0.1.0
+**Current Version:** v0.2.0

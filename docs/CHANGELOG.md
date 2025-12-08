@@ -7,6 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-12-07
+
+### Added
+
+- **AWS Secrets Manager Backend** - First SDK-based backend (validates interface universality)
+  - Native AWS SDK for Go v2 integration (`github.com/aws/aws-sdk-go-v2/service/secretsmanager`)
+  - IAM credential support (environment variables, shared config, instance roles)
+  - Automatic pagination for large secret collections (100+ secrets)
+  - Secret name prefixing for namespace isolation (`myapp/secret-name`)
+  - Tag-based secret organization (`vaultmux:true`, `prefix:<value>`)
+  - Configurable AWS region support
+  - LocalStack endpoint override for local testing
+  - Force deletion (immediate, no recovery period)
+  - Comprehensive error mapping (AWS exceptions → vaultmux errors)
+  - No session management needed (IAM credentials are long-lived or SDK-managed)
+- **LocalStack Testing Infrastructure** - Zero-cost AWS testing
+  - Docker-based AWS service emulation
+  - Complete Secrets Manager API coverage
+  - Integration tests with LocalStack endpoint override
+  - Alternative moto (Python mock) support documented
+  - CI/CD workflow examples for GitHub Actions
+- **AWS Implementation Documentation** (docs/AWS_IMPLEMENTATION_PLAN.md)
+  - 10-day phased implementation schedule
+  - Complete method-by-method code examples
+  - Session pattern explanation for IAM credentials
+  - Testing strategy (LocalStack, moto, mocked SDK)
+  - IAM permissions policy templates
+  - Error handling patterns
+  - Production deployment guidance
+
+### Changed
+
+- **go.mod** - Added AWS SDK v2 dependencies
+  - `github.com/aws/aws-sdk-go-v2` v1.40.1
+  - `github.com/aws/aws-sdk-go-v2/config` v1.32.3
+  - `github.com/aws/aws-sdk-go-v2/service/secretsmanager` v1.40.3
+  - Go version upgraded from 1.21 to 1.23 (AWS SDK requirement)
+- **README.md** - Updated for 5 backends
+  - Added AWS Secrets Manager to supported backends table
+  - Added "Integration" column (CLI vs SDK vs PowerShell vs OS)
+  - Updated backend comparison table with AWS column
+  - Added "When to Use AWS Secrets Manager" guidance
+  - Updated security considerations for IAM credentials
+  - Changed "Zero Dependencies" to "Minimal Dependencies" (accurate now)
+- **ROADMAP.md** - AWS Secrets Manager marked "IN PROGRESS (v0.3.0)"
+  - Comprehensive LocalStack/moto testing strategy
+  - API mapping documentation (GetItem → GetSecretValue, etc.)
+  - IAM permissions JSON policy template
+  - Cost analysis (~$0.40/secret/month + $0.05/10k API calls)
+  - Implementation priority updated (v0.3.0 in progress)
+- **factory.go** - Added `BackendAWSSecretsManager` constant
+  - Updated Config comment to include "awssecrets"
+  - Maintains backward compatibility
+
+### Technical Details
+
+- **Pattern Validation**: First SDK-based backend proves `Backend` interface works beyond CLI wrappers
+- **Session Semantics**: IAM credentials (long-lived, SDK-managed) validate session flexibility
+- **Error Handling**: AWS typed errors (`ResourceNotFoundException`, `ResourceExistsException`) map cleanly to vaultmux standard errors
+- **Testing Strategy**: LocalStack enables full integration testing without AWS account
+- **Integration Type**: Native SDK (not CLI subprocess) - different pattern from Bitwarden/1Password/pass
+
+### Developer Experience
+
+- **Local Testing**: `docker run localstack/localstack` + endpoint override enables offline development
+- **No AWS Account Needed**: Contributors can develop and test without AWS credentials
+- **Fast Tests**: LocalStack starts in seconds, integration tests run quickly
+- **Identical API**: LocalStack provides same API as production AWS
+
 ## [0.2.0] - 2025-12-07
 
 ### Added
@@ -137,6 +206,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/blackwell-systems/vaultmux/releases/tag/v0.1.0

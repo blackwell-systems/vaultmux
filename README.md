@@ -15,20 +15,21 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 ## Features
 
 - **Unified API** - Single interface works with any backend
-- **Zero External Dependencies** - Only Go stdlib; backends use their own CLIs
+- **Minimal Dependencies** - Core has zero dependencies; AWS backend uses AWS SDK v2
 - **Context Support** - All operations accept `context.Context` for cancellation/timeout
 - **Session Caching** - Avoid repeated authentication prompts
 - **Type-Safe** - Full static typing with Go interfaces
-- **Testable** - Includes mock backend for unit testing (89%+ core coverage)
+- **Testable** - Includes mock backend for unit testing (98%+ core coverage)
 
 ## Supported Backends
 
-| Backend | CLI Tool | Features | Platform |
-|---------|----------|----------|----------|
-| **Bitwarden** | `bw` | Session tokens, folders, sync | All |
-| **1Password** | `op` | Session tokens, vaults, auto-sync | All |
-| **pass** | `pass` + `gpg` | Git-based, directories, offline | Unix |
+| Backend | Integration | Features | Platform |
+|---------|-------------|----------|----------|
+| **Bitwarden** | CLI (`bw`) | Session tokens, folders, sync | All |
+| **1Password** | CLI (`op`) | Session tokens, vaults, auto-sync | All |
+| **pass** | CLI (`pass` + `gpg`) | Git-based, directories, offline | Unix |
 | **Windows Credential Manager** | PowerShell | OS-level auth, Windows Hello | Windows |
+| **AWS Secrets Manager** | SDK (aws-sdk-go-v2) | IAM auth, versioning, rotation | All |
 
 ## Installation
 
@@ -92,7 +93,7 @@ func main() {
 
 ```go
 config := vaultmux.Config{
-    // Backend type: "bitwarden", "1password", "pass", or "wincred"
+    // Backend type: "bitwarden", "1password", "pass", "wincred", or "awssecrets"
     Backend: vaultmux.BackendPass,
 
     // Pass-specific
@@ -105,7 +106,10 @@ config := vaultmux.Config{
 
     // Backend-specific options
     Options: map[string]string{
-        // Backend-specific key-value pairs
+        // AWS Secrets Manager:
+        "region":   "us-west-2",              // AWS region
+        "prefix":   "myapp/",                 // Secret name prefix
+        "endpoint": "http://localhost:4566", // LocalStack endpoint (for testing)
     },
 }
 
@@ -249,7 +253,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed design documentation.
 
 **Key Design Principles:**
 
-1. **Backend CLIs are the source of truth** - We shell out to `bw`, `op`, `pass` rather than reimplementing protocols
+1. **Backends integrate natively** - CLI backends shell out to `bw`, `op`, `pass`; SDK backends use native clients (AWS SDK v2)
 2. **Fail fast, fail clearly** - Explicit errors over silent failures
 3. **No global state** - All state lives in Backend/Session structs
 4. **Functional options** - Extensible configuration without breaking changes
@@ -314,17 +318,18 @@ var (
 
 ## Backend Comparison
 
-| Feature | Bitwarden | 1Password | pass |
-|---------|-----------|-----------|------|
-| **CLI Tool** | `bw` | `op` | `pass` |
-| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key |
-| **Session Duration** | Until lock | 30 minutes | GPG agent TTL |
-| **Sync** | `bw sync` | Automatic | `pass git pull/push` |
-| **Offline Mode** | Yes (cached) | Limited | Yes (local files) |
-| **Folders** | Yes (folderId) | Vaults | Directories |
-| **Sharing** | Organizations | Vaults | Git repos |
-| **Free Tier** | Yes | No | Yes (FOSS) |
-| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) |
+| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager |
+|---------|-----------|-----------|------|------------------|---------------------|
+| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) |
+| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | Windows Hello/PIN | IAM credentials |
+| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM keys) |
+| **Sync** | `bw sync` | Automatic | `pass git pull/push` | N/A | Always synchronized |
+| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (local only) | No (requires AWS API) |
+| **Folders** | Yes (folderId) | Vaults | Directories | Prefix-based | Prefix-based + tags |
+| **Sharing** | Organizations | Vaults | Git repos | Machine-local | IAM policies |
+| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) |
+| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (OS feature) | No (AWS only) |
+| **Platform** | All | All | Unix | Windows | All |
 
 ### When to Use Each
 
@@ -344,9 +349,22 @@ var (
 - Minimal dependencies preferred
 - Full offline support needed
 
+**Windows Credential Manager:**
+- Windows-only deployments
+- No external CLI dependencies
+- OS-level authentication integration
+- Simple credential storage
+
+**AWS Secrets Manager:**
+- Applications running on AWS (EC2, ECS, Lambda)
+- Automatic secret rotation needed
+- IAM-based access control
+- Audit logging requirements
+- Multi-region redundancy
+
 ## Requirements
 
-Each backend requires its CLI tool to be installed:
+Each backend has different requirements:
 
 ```bash
 # Bitwarden
@@ -361,7 +379,14 @@ brew install pass      # macOS
 
 # Windows Credential Manager
 # Built into Windows - no installation required!
-# Uses PowerShell for access
+# Uses PowerShell for credential access
+
+# AWS Secrets Manager
+# Requires AWS SDK v2 (automatically installed via go get)
+# AWS credentials configured via:
+#   - Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+#   - Shared credentials file (~/.aws/credentials)
+#   - IAM instance role (for EC2/ECS)
 ```
 
 ## Security Considerations
