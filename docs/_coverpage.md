@@ -1,6 +1,6 @@
 ![logo](assets/vaultmux_logo.png ':size=250')
 
-# Vaultmux
+# Vaultmux <small>v0.3.0</small>
 
 > The definitive Go library for multi-vault secret management
 
