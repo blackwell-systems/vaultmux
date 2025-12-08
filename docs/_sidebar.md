@@ -1,5 +1,5 @@
 - **Getting Started**
-  - [Overview](/)
+  - [Vaultmux](/)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
   - [Supported Backends](#supported-backends)
