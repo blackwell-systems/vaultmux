@@ -25,6 +25,15 @@
   - [Testing Your Backend](EXTENDING.md#testing-your-backend)
   - [Complete Example](EXTENDING.md#complete-example)
 
+- **Testing**
+  - [Testing Guide](TESTING.md)
+  - [Testing Philosophy](TESTING.md#testing-philosophy)
+  - [Quick Start](TESTING.md#quick-start)
+  - [Backend Strategies](TESTING.md#backend-testing-strategies)
+  - [AWS + LocalStack](TESTING.md#aws-secrets-manager--localstack)
+  - [CI/CD Testing](TESTING.md#cicd-testing)
+  - [Troubleshooting](TESTING.md#troubleshooting)
+
 - **Roadmap**
   - [Future Backends](ROADMAP.md)
   - [Windows Support](ROADMAP.md#high-priority-windows-native-support)

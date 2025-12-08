@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-12-08
+
+### Added
+
+- **Testing Documentation** - Comprehensive guide for testing vaultmux backends
+  - TESTING.md: Complete testing guide with LocalStack integration examples
+  - LocalStack setup and configuration for AWS Secrets Manager testing
+  - Backend testing strategies for CLI-based and SDK-based backends
+  - Integration test patterns with environment variable conditional skipping
+  - CI/CD testing examples and GitHub Actions workflow
+  - Troubleshooting guide for common testing issues
+  - Coverage goals and test organization best practices
+  - Added to docsify documentation site navigation
+
+### Changed
+
+- **Documentation Site** - Enhanced sidebar navigation
+  - Added Testing section between Extending and Roadmap
+  - Testing Guide with detailed subsections (Philosophy, Quick Start, Backend Strategies, etc.)
+  - Improved documentation flow and organization
+
+### Technical Details
+
+- **LocalStack Verification**: AWS backend integration tests verified against LocalStack
+  - All CRUD operations tested (Create, Get, Update, Delete, List)
+  - Pagination testing with multiple items
+  - Error handling verification (ErrNotFound, ErrAlreadyExists)
+  - Test execution time: ~3 seconds for full suite
+  - 100% pass rate on integration tests
+
 ## [0.3.0] - 2025-12-08
 
 ### Added
@@ -206,7 +236,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/blackwell-systems/vaultmux/releases/tag/v0.1.0
