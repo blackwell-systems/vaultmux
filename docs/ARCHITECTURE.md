@@ -87,8 +87,24 @@ github.com/blackwell-systems/vaultmux/
 │   │   ├── onepassword.go # 1Password CLI backend
 │   │   └── session.go     # OP session management
 │   │
-│   └── pass/
-│       └── pass.go        # pass (GPG-based) backend
+│   ├── pass/
+│   │   └── pass.go        # pass (GPG-based) backend
+│   │
+│   ├── wincred/
+│   │   ├── wincred_windows.go # Windows Credential Manager (Windows)
+│   │   └── wincred_unix.go    # Stub for Unix platforms
+│   │
+│   ├── awssecrets/
+│   │   ├── awssecrets.go      # AWS Secrets Manager SDK backend
+│   │   └── session.go         # IAM session wrapper
+│   │
+│   ├── gcpsecrets/
+│   │   ├── gcpsecrets.go      # GCP Secret Manager SDK backend
+│   │   └── session.go         # GCP session wrapper
+│   │
+│   └── azurekeyvault/
+│       ├── azurekeyvault.go   # Azure Key Vault SDK backend
+│       └── session.go         # Azure AD session wrapper
 │
 ├── mock/
 │   └── mock.go            # In-memory mock for testing

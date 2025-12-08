@@ -1,12 +1,12 @@
 # Vaultmux Roadmap
 
-> **Current Status:** v0.2.0 - Production-ready with 6 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager)
+> **Current Status:** v0.3.0 - Production-ready with 7 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, Azure Key Vault)
 
 This document outlines planned backend integrations and major features for vaultmux.
 
 ---
 
-## Supported Backends (v0.2.0)
+## Supported Backends (v0.3.0)
 
 - **Bitwarden** - Open source, self-hostable (Vaultwarden)
 - **1Password** - Enterprise-grade with biometric auth
@@ -14,6 +14,7 @@ This document outlines planned backend integrations and major features for vault
 - **Windows Credential Manager** - Native Windows integration (v0.2.0)
 - **AWS Secrets Manager** - Cloud-native AWS secret storage (v0.2.0)
 - **Google Cloud Secret Manager** - Cloud-native GCP secret storage (v0.2.0)
+- **Azure Key Vault** - Microsoft Azure secret storage with HSM backing (v0.3.0)
 
 ---
 
@@ -283,29 +284,56 @@ AWS Secrets Manager requires AWS account and incurs costs, so we'll use local em
 ---
 
 #### Azure Key Vault
-**Status:** Under Consideration
-**Priority:** Medium-High
+**Status:** ✅ **IMPLEMENTED** (v0.3.0)
+**Priority:** High - Third SDK-based backend, completes major cloud provider support
 
 **Why:**
-- Native Azure integration
-- HSM-backed key storage
-- Enterprise authentication (Azure AD)
+- Native Azure integration for Microsoft cloud deployments
+- HSM-backed secret storage (FIPS 140-2 Level 2 validated)
+- Enterprise authentication via Azure AD
 - Popular in Microsoft/Azure shops
+- Soft-delete and purge protection for compliance
+- Azure Monitor integration for audit logging
 
 **Implementation:**
-- Use Azure SDK for Go
-- Session: Azure AD authentication
-- Folders: Use Key Vault "vaults" or tags
+- Use Azure SDK for Go: `github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azsecrets`
+- Session: Azure AD via DefaultAzureCredential (Managed Identity, Service Principal, Azure CLI)
+- Item naming: Secret name with prefix (e.g., `myapp-secret-name`)
+- Folders: Not supported natively (flat namespace per vault, could use tags in future)
+- Vault URL: Required configuration (e.g., `https://myvault.vault.azure.net/`)
+
+**API Mapping:**
+```go
+GetItem()    → client.GetSecret(name, "", nil)
+CreateItem() → client.SetSecret(name, params, nil)
+UpdateItem() → client.SetSecret(name, params, nil) // Creates new version
+DeleteItem() → client.DeleteSecret(name, nil)
+ListItems()  → client.NewListSecretPropertiesPager(nil)
+```
 
 **Challenges:**
-- Requires Azure subscription
-- Complex authentication setup
-- API latency
+- Requires Azure subscription and Key Vault setup
+- Multiple Azure AD authentication patterns (similar complexity to AWS)
+- No local emulator (like GCP, must use real Azure for integration tests)
+- RBAC permissions setup (Key Vault Secrets Officer role required)
 
 **Use Case:**
-- Azure-deployed applications
-- Organizations using Azure AD
-- Enterprise Windows + Azure environments
+```go
+backend, _ := vaultmux.New(vaultmux.Config{
+    Backend: vaultmux.BackendAzureKeyVault,
+    Options: map[string]string{
+        "vault_url": "https://myvault.vault.azure.net/",
+        "prefix":    "myapp-",
+    },
+})
+// Uses Azure AD credentials from environment, CLI, or Managed Identity
+```
+
+**Testing Strategy:**
+- Unit tests with no Azure credentials required (configuration, interface compliance)
+- Integration tests skip gracefully when AZURE_VAULT_URL not set
+- Real Azure free tier testing (10k operations free per month)
+- Azure SDK is interface-based, excellent for mocking
 
 ---
 
@@ -608,10 +636,14 @@ Unlike AWS (LocalStack) or Windows (WSL2), GCP Secret Manager has no good local 
 7. LocalStack testing infrastructure for AWS ✅
 8. Application Default Credentials (ADC) patterns for GCP ✅
 
-### v0.3.0 📋 PLANNED
-1. **Azure Key Vault** - Completes big three cloud providers
-2. Azure AD authentication patterns
-3. Vault URL configuration support
+### v0.3.0 ✅ RELEASED (2025-12-08)
+1. **Azure Key Vault** - Completes big three cloud providers ✅
+2. Azure AD authentication patterns (Managed Identity, Service Principal, CLI) ✅
+3. Vault URL configuration support ✅
+4. HSM-backed secret storage with FIPS 140-2 Level 2 validation ✅
+5. Soft-delete and purge protection ✅
+6. Brand guidelines documentation (BRAND.md) ✅
+7. "Why Vaultmux?" motivation section in README ✅
 
 ### v0.4.0 📋 PLANNED
 1. **HashiCorp Vault** - Enterprise option

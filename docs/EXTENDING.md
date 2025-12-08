@@ -28,10 +28,13 @@ vaultmux/
 ├── session.go           # Session caching utilities
 ├── errors.go            # Standard error types
 └── backends/
-    ├── bitwarden/       # Reference: Token-based, remote sync
-    ├── onepassword/     # Reference: Biometric auth, auto-sync
-    ├── pass/            # Reference: Local, GPG-based
-    ├── wincred/         # Reference: Platform-specific (Windows only)
+    ├── bitwarden/       # Reference: CLI wrapper, token-based, remote sync
+    ├── onepassword/     # Reference: CLI wrapper, biometric auth, auto-sync
+    ├── pass/            # Reference: CLI wrapper, local GPG-based
+    ├── wincred/         # Reference: OS API, platform-specific (Windows only)
+    ├── awssecrets/      # Reference: SDK-based, IAM auth, cloud-native
+    ├── gcpsecrets/      # Reference: SDK-based, ADC auth, cloud-native
+    ├── azurekeyvault/   # Reference: SDK-based, Azure AD auth, HSM-backed
     └── yourbackend/     # Your new backend here
 ```
 
