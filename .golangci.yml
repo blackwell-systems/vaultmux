@@ -34,6 +34,10 @@ issues:
     - linters:
         - revive
       text: "unused-parameter"
+    # Exclude exported comment warnings for LocationManager methods (documented inline in Backend interface)
+    - linters:
+        - revive
+      text: "exported method Backend\\.(ListLocations|LocationExists|CreateLocation|ListItemsInLocation)"
 
 run:
   timeout: 5m

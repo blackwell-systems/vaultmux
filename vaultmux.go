@@ -79,7 +79,6 @@ type Backend interface {
 	DeleteItem(ctx context.Context, name string, session Session) error
 
 	// Location management (folders/vaults) - optional, not all backends support these
-
 	// ListLocations returns all available locations/folders/vaults.
 	ListLocations(ctx context.Context, session Session) ([]string, error)
 
