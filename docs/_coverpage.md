@@ -8,10 +8,10 @@
 go get github.com/blackwell-systems/vaultmux
 ```
 
-- **Unified API** - Single interface for Bitwarden, 1Password, and pass
-- **Zero Dependencies** - Only Go stdlib, backends use their CLIs
+- **Unified API** - Single interface for Bitwarden, 1Password, pass, and Windows Credential Manager
+- **Zero Dependencies** - Only Go stdlib, backends use their CLIs or OS APIs
 - **Type-Safe** - Full Go interfaces with context support
-- **Session Caching** - Avoid repeated authentication prompts
+- **Cross-Platform** - Linux, macOS, Windows with native backend support
 
 [Get Started](#vaultmux)
 [VIEW ON GITHUB](https://github.com/blackwell-systems/vaultmux)

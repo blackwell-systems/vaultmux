@@ -636,17 +636,18 @@ func TestMyCode(t *testing.T) {
 
 ### 10.1 Feature Matrix
 
-| Feature | Bitwarden | 1Password | pass |
-|---------|-----------|-----------|------|
-| **CLI Tool** | `bw` | `op` | `pass` |
-| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key |
-| **Session Duration** | Until lock | 30 minutes | GPG agent TTL |
-| **Sync** | `bw sync` | Automatic | `pass git pull/push` |
-| **Offline Mode** | Yes (cached) | Limited | Yes (local files) |
-| **Folders** | Yes (folderId) | Vaults | Directories |
-| **Sharing** | Organizations | Vaults | Git repos |
-| **Free Tier** | Yes | No | Yes (FOSS) |
-| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) |
+| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr |
+|---------|-----------|-----------|------|------------------|
+| **CLI Tool** | `bw` | `op` | `pass` | PowerShell |
+| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | OS-level / Windows Hello |
+| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed |
+| **Sync** | `bw sync` | Automatic | `pass git pull/push` | None (local only) |
+| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (always local) |
+| **Folders** | Yes (folderId) | Vaults | Directories | No (flat namespace) |
+| **Sharing** | Organizations | Vaults | Git repos | Windows user account |
+| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) |
+| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (local OS) |
+| **Platform** | All | All | Unix | Windows only |
 
 ### 10.2 Implementation Differences
 
@@ -670,12 +671,19 @@ graph TB
         PDir[Directories]
     end
 
+    subgraph WC["Windows Cred Mgr"]
+        WCSess[No Session<br/>OS Auth]
+        WCSync[None - local only]
+        WCFolder[No folders]
+    end
+
     Backend[Backend Interface] -.->|implements| BW
     Backend -.->|implements| OP
     Backend -.->|implements| P
+    Backend -.->|implements| WC
 
     style Backend fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
-    style BW,OP,P fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
+    style BW,OP,P,WC fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
 ### 10.3 When to Use Each Backend
@@ -695,6 +703,13 @@ graph TB
 - Git-based workflow
 - Minimal dependencies preferred
 - Full offline support needed
+
+**Windows Credential Manager:**
+- Windows development environments
+- No external tools or dependencies
+- Windows Hello / biometric auth
+- Single-machine secrets (no sync needed)
+- Quick setup for Windows-only projects
 
 ---
 

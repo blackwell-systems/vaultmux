@@ -80,11 +80,12 @@ go get github.com/blackwell-systems/vaultmux
 
 ## Supported Backends
 
-| Backend | CLI Tool | Features |
-|---------|----------|----------|
-| **Bitwarden** | `bw` | Session tokens, folders, sync |
-| **1Password** | `op` | Session tokens, vaults, auto-sync |
-| **pass** | `pass` + `gpg` | Git-based, directories, offline |
+| Backend | CLI Tool | Features | Platform |
+|---------|----------|----------|----------|
+| **Bitwarden** | `bw` | Session tokens, folders, sync | All |
+| **1Password** | `op` | Session tokens, vaults, auto-sync | All |
+| **pass** | `pass` + `gpg` | Git-based, directories, offline | Unix |
+| **Windows Credential Manager** | PowerShell | OS-level auth, Windows Hello | Windows |
 
 ## Documentation
 

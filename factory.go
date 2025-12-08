@@ -15,11 +15,13 @@ const (
 	BackendOnePassword BackendType = "1password"
 	// BackendPass represents the pass (Unix password manager) backend.
 	BackendPass BackendType = "pass"
+	// BackendWindowsCredentialManager represents the Windows Credential Manager backend.
+	BackendWindowsCredentialManager BackendType = "wincred"
 )
 
 // Config holds vault configuration.
 type Config struct {
-	// Backend type: "bitwarden", "1password", "pass"
+	// Backend type: "bitwarden", "1password", "pass", "wincred"
 	Backend BackendType
 
 	// Pass-specific

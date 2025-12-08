@@ -23,11 +23,12 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 
 ## Supported Backends
 
-| Backend | CLI Tool | Features |
-|---------|----------|----------|
-| **Bitwarden** | `bw` | Session tokens, folders, sync |
-| **1Password** | `op` | Session tokens, vaults, auto-sync |
-| **pass** | `pass` + `gpg` | Git-based, directories, offline |
+| Backend | CLI Tool | Features | Platform |
+|---------|----------|----------|----------|
+| **Bitwarden** | `bw` | Session tokens, folders, sync | All |
+| **1Password** | `op` | Session tokens, vaults, auto-sync | All |
+| **pass** | `pass` + `gpg` | Git-based, directories, offline | Unix |
+| **Windows Credential Manager** | PowerShell | OS-level auth, Windows Hello | Windows |
 
 ## Installation
 
@@ -91,7 +92,7 @@ func main() {
 
 ```go
 config := vaultmux.Config{
-    // Backend type: "bitwarden", "1password", or "pass"
+    // Backend type: "bitwarden", "1password", "pass", or "wincred"
     Backend: vaultmux.BackendPass,
 
     // Pass-specific
@@ -357,6 +358,10 @@ npm install -g @bitwarden/cli
 # pass
 apt-get install pass  # Debian/Ubuntu
 brew install pass      # macOS
+
+# Windows Credential Manager
+# Built into Windows - no installation required!
+# Uses PowerShell for access
 ```
 
 ## Security Considerations

@@ -19,7 +19,7 @@ This document outlines planned backend integrations and major features for vault
 ### High Priority: Windows Native Support
 
 #### Windows Credential Manager
-**Status:** Planned for v0.2.0
+**Status:** ✅ **IMPLEMENTED** (v0.2.0)
 **Priority:** High - Critical for Windows users
 
 **Why:**
