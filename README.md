@@ -1,16 +1,16 @@
 # Vaultmux
 
-> **Unified interface for multiple secret management backends**
+> **The definitive Go library for multi-vault secret management**
 
 [![Blackwell Systems™](https://raw.githubusercontent.com/blackwell-systems/blackwell-docs-theme/main/badge-trademark.svg)](https://github.com/blackwell-systems)
-[![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://go.dev/)
 [![Version](https://img.shields.io/github/v/release/blackwell-systems/vaultmux)](https://github.com/blackwell-systems/vaultmux/releases)
 [![CI](https://github.com/blackwell-systems/vaultmux/workflows/CI/badge.svg)](https://github.com/blackwell-systems/vaultmux/actions)
 [![codecov](https://codecov.io/gh/blackwell-systems/vaultmux/branch/main/graph/badge.svg)](https://codecov.io/gh/blackwell-systems/vaultmux)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Sponsor](https://img.shields.io/badge/Sponsor-Buy%20Me%20a%20Coffee-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/blackwellsystems)
 
-Vaultmux is a Go library that provides a unified interface for interacting with multiple secret management backends. Write your code once and support Bitwarden, 1Password, and pass (the standard Unix password manager) with the same API.
+Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, and AWS Secrets Manager with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
 
 ## Features
 
@@ -418,6 +418,15 @@ Created as part of the [blackwell-systems/dotfiles](https://github.com/blackwell
 
 ## Related Projects
 
-- [Bitwarden CLI](https://github.com/bitwarden/clients)
-- [1Password CLI](https://developer.1password.com/docs/cli/)
-- [pass](https://www.passwordstore.org/)
+### Supported Backends
+- [Bitwarden CLI](https://github.com/bitwarden/clients) - Open source password manager
+- [1Password CLI](https://developer.1password.com/docs/cli/) - Enterprise password management
+- [pass](https://www.passwordstore.org/) - Unix password store (GPG-based)
+- [Windows Credential Manager](https://docs.microsoft.com/en-us/windows/win32/secauthn/credential-manager) - Native Windows credential storage
+- [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) - Cloud-native secret management
+
+### Similar Projects
+- [HashiCorp Vault](https://www.vaultproject.io/) - Enterprise secret management platform
+- [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) - Azure secret management
+- [GCP Secret Manager](https://cloud.google.com/secret-manager) - Google Cloud secret management
+- [AWS SDK for Go](https://github.com/aws/aws-sdk-go-v2) - Official AWS SDK (used by vaultmux)
