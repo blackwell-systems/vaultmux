@@ -248,20 +248,39 @@ func TestAutoRefreshSession(t *testing.T) {
 		}
 	})
 
-	t.Run("refresh on invalid", func(t *testing.T) {
+	t.Run("refresh on invalid - success", func(t *testing.T) {
 		inner := &mockTestSession{
-			token: "old-token",
-			valid: false,
+			token:      "old-token",
+			valid:      false,
+			refreshErr: nil, // Refresh succeeds
 		}
 		session := NewAutoRefreshSession(inner, backend)
 
-		// This should trigger refresh
+		// This should trigger refresh, which succeeds
+		// After successful refresh, inner.valid should remain false in mock
+		// but real implementation would update it
 		token := session.Token()
 
-		// Should still return old token if refresh failed
-		// (actual behavior depends on implementation)
-		if token == "" {
-			t.Error("Token() returned empty string")
+		// Should return the old token
+		if token != "old-token" {
+			t.Errorf("Token() = %q, want %q", token, "old-token")
+		}
+	})
+
+	t.Run("refresh on invalid - failure", func(t *testing.T) {
+		inner := &mockTestSession{
+			token:      "expired-token",
+			valid:      false,
+			refreshErr: ErrSessionExpired, // Refresh fails
+		}
+		session := NewAutoRefreshSession(inner, backend)
+
+		// This should trigger refresh, which fails
+		token := session.Token()
+
+		// Should still return expired token
+		if token != "expired-token" {
+			t.Errorf("Token() = %q, want %q", token, "expired-token")
 		}
 	})
 

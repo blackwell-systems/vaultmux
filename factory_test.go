@@ -86,6 +86,17 @@ func TestNew_SessionTTLDefault(t *testing.T) {
 	}
 }
 
+func TestMustNew_Success(t *testing.T) {
+	cfg := Config{
+		Backend: BackendPass,
+	}
+
+	backend := MustNew(cfg)
+	if backend == nil {
+		t.Error("MustNew() returned nil backend")
+	}
+}
+
 func TestMustNew_Panic(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
