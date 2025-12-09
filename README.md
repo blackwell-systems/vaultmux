@@ -66,8 +66,6 @@ backend, _ := vaultmux.New(config)
 secret, _ := backend.GetNotes(ctx, "api-key", session)
 ```
 
-This flexibility means your dotfiles framework (or any secret-dependent application) can support whatever workflows users throw at you—from privacy-focused GPG enthusiasts to enterprise teams using Azure Key Vault—all through one convenient interface.
-
 ## Installation
 
 ```bash
