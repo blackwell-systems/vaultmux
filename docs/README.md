@@ -9,7 +9,7 @@
 
 [![CI](https://github.com/blackwell-systems/vaultmux/workflows/CI/badge.svg)](https://github.com/blackwell-systems/vaultmux/actions) [![codecov](https://codecov.io/gh/blackwell-systems/vaultmux/branch/main/graph/badge.svg)](https://codecov.io/gh/blackwell-systems/vaultmux)
 [![Sponsor](https://img.shields.io/badge/Sponsor-Buy%20Me%20a%20Coffee-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/blackwellsystems)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, and Azure Key Vault with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
 
@@ -435,11 +435,11 @@ Contributions welcome! Please:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details
+Apache License 2.0 - see [LICENSE](LICENSE) for details
 
 ## Brand
 
-The **code** in this repository is licensed under MIT. The **Blackwell Systems™** name and logo are protected trademarks. See [BRAND.md](BRAND.md) for usage guidelines.
+The **code** in this repository is licensed under the Apache License 2.0. The **Blackwell Systems™** name and logo are protected trademarks. See [BRAND.md](BRAND.md) for usage guidelines.
 
 ## Credits
 

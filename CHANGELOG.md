@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **License** - Changed from MIT License to Apache License 2.0
+  - LICENSE file updated to Apache License 2.0
+  - All documentation and badges updated (README.md, BRAND.md, etc.)
+  - Provides additional patent protection and contributor license terms
+  - Code remains free and open source
+  - Effective starting with v0.3.1 and all future releases
 - **Documentation Site** - Enhanced sidebar navigation
   - Added Testing section between Extending and Roadmap
   - Testing Guide with detailed subsections (Philosophy, Quick Start, Backend Strategies, etc.)
@@ -221,7 +227,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - README.md with quick start and usage examples
   - ARCHITECTURE.md with design principles and patterns
   - Go package documentation with examples
-  - MIT License
+  - Apache License 2.0
 - **CI/CD**
   - GitHub Actions workflow
   - golangci-lint integration
