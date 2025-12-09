@@ -142,6 +142,24 @@ func TestStorage_ListSecrets(t *testing.T) {
 		if len(secrets) != 2 {
 			t.Errorf("ListSecrets() page 2 returned %d secrets, want 2", len(secrets))
 		}
+
+		if nextToken == "" {
+			t.Error("ListSecrets() page 2 nextToken is empty, want non-empty (more pages available)")
+		}
+
+		// Third page (last page with 1 secret)
+		secrets, nextToken, err = storage.ListSecrets(ctx, "projects/test-project", 2, nextToken)
+		if err != nil {
+			t.Fatalf("ListSecrets() page 3 error = %v", err)
+		}
+
+		if len(secrets) != 1 {
+			t.Errorf("ListSecrets() page 3 returned %d secrets, want 1", len(secrets))
+		}
+
+		if nextToken != "" {
+			t.Errorf("ListSecrets() page 3 nextToken = %s, want empty (last page)", nextToken)
+		}
 	})
 }
 
