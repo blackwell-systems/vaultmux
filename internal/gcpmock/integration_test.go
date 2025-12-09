@@ -31,7 +31,11 @@ func TestIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Logf("Failed to close client: %v", err)
+		}
+	}()
 
 	projectID := "test-project"
 	parent := fmt.Sprintf("projects/%s", projectID)
@@ -224,7 +228,11 @@ func TestIntegration_Pagination(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			t.Logf("Failed to close client: %v", err)
+		}
+	}()
 
 	// Create 5 secrets
 	parent := "projects/pagination-test"

@@ -4,11 +4,13 @@
 // This server implements the gRPC Secret Manager API without requiring GCP credentials.
 //
 // Usage:
-//   gcp-secret-manager-mock --port 9090
+//
+//	gcp-secret-manager-mock --port 9090
 //
 // Environment Variables:
-//   GCP_MOCK_PORT        - Port to listen on (default: 9090)
-//   GCP_MOCK_LOG_LEVEL   - Log level: debug, info, warn, error (default: info)
+//
+//	GCP_MOCK_PORT        - Port to listen on (default: 9090)
+//	GCP_MOCK_LOG_LEVEL   - Log level: debug, info, warn, error (default: info)
 package main
 
 import (

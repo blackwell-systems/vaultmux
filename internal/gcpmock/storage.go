@@ -26,7 +26,7 @@ type Storage struct {
 // StoredSecret represents a secret with all its versions in memory.
 type StoredSecret struct {
 	// Secret metadata (from secretmanagerpb.Secret)
-	Name        string            // Full resource name: projects/{project}/secrets/{secret-id}
+	Name        string // Full resource name: projects/{project}/secrets/{secret-id}
 	CreateTime  *timestamppb.Timestamp
 	Labels      map[string]string
 	Annotations map[string]string
@@ -40,7 +40,7 @@ type StoredSecret struct {
 // StoredVersion represents a single secret version.
 type StoredVersion struct {
 	// Version metadata
-	Name       string                              // Full resource name with version
+	Name       string // Full resource name with version
 	CreateTime *timestamppb.Timestamp
 	State      secretmanagerpb.SecretVersion_State // ENABLED, DISABLED, DESTROYED
 
@@ -148,7 +148,7 @@ func (s *Storage) ListSecrets(ctx context.Context, parent string, pageSize int32
 	startIdx := 0
 	if pageToken != "" {
 		// Parse token as simple integer index
-		fmt.Sscanf(pageToken, "%d", &startIdx)
+		_, _ = fmt.Sscanf(pageToken, "%d", &startIdx)
 	}
 
 	// Apply page size limit
@@ -279,7 +279,7 @@ func (s *Storage) AccessSecretVersion(ctx context.Context, versionName string) (
 // resolveLatestVersion finds the highest version number with ENABLED state.
 // Must be called with read lock held.
 func (s *Storage) resolveLatestVersion(stored *StoredSecret) (string, error) {
-	var latestVersionNum int64 = 0
+	var latestVersionNum int64
 
 	for versionID, version := range stored.Versions {
 		if version.State != secretmanagerpb.SecretVersion_ENABLED {
@@ -287,7 +287,7 @@ func (s *Storage) resolveLatestVersion(stored *StoredSecret) (string, error) {
 		}
 
 		var num int64
-		fmt.Sscanf(versionID, "%d", &num)
+		_, _ = fmt.Sscanf(versionID, "%d", &num)
 		if num > latestVersionNum {
 			latestVersionNum = num
 		}
