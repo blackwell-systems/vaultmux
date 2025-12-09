@@ -205,9 +205,8 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 	}
 
 	var items []*vaultmux.Item
-	var nextToken *string
 
-	for {
+	for nextToken := (*string)(nil); ; {
 		// Note: LocalStack doesn't support wildcard filtering (e.g., "prefix/*")
 		// so we list all secrets and filter in Go code
 		result, err := b.client.ListSecrets(ctx, &secretsmanager.ListSecretsInput{
