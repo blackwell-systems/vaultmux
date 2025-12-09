@@ -30,14 +30,14 @@ func (s *Server) ListSecrets(ctx context.Context, req *secretmanagerpb.ListSecre
 		return nil, status.Error(codes.InvalidArgument, "parent is required")
 	}
 
-	secrets, nextToken, err := s.storage.ListSecrets(ctx, req.GetParent(), req.GetPageSize(), req.GetPageToken())
+	secrets, token, err := s.storage.ListSecrets(ctx, req.GetParent(), req.GetPageSize(), req.GetPageToken())
 	if err != nil {
 		return nil, err
 	}
 
 	return &secretmanagerpb.ListSecretsResponse{
 		Secrets:       secrets,
-		NextPageToken: nextToken,
+		NextPageToken: token,
 	}, nil
 }
 
