@@ -123,7 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Azure AD credential documentation (Environment variables, CLI, Managed Identity)
   - Alternative mocking via Azure SDK interfaces
 - **Documentation Enhancements**
-  - README.md: Added "Why Vaultmux?" section explaining dotfiles framework motivation
+  - README.md: Added "Why Vaultmux?" section with unified API value proposition and use cases
   - README.md: Updated to include Azure Key Vault in all backend tables and comparisons
   - docs/_coverpage.md: Updated from 6 to 7 backends
   - ARCHITECTURE.md: Added Azure to feature matrix, implementation diagram, and "When to Use" guidance
