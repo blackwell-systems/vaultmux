@@ -645,18 +645,74 @@ Unlike AWS (LocalStack) or Windows (WSL2), GCP Secret Manager has no good local 
 6. Brand guidelines documentation (BRAND.md) ✅
 7. "Why Vaultmux?" motivation section in README ✅
 
-### v0.4.0 📋 PLANNED
+### v0.3.3 🔒 SECURITY & HARDENING (High Priority)
+1. **Security Fixes** - Critical security improvements
+   - Add input validation to prevent command injection in CLI backends
+   - Fix session file permissions (0700 for directories, 0600 for files)
+   - Fix AutoRefreshSession race condition (add mutex)
+   - Implement secure error handling for session operations
+2. **Error Handling Improvements**
+   - Implement BackendError.Is() for proper sentinel error checking
+   - Standardize error wrapping across all backends
+   - Add context to error messages
+
+### v0.4.0 🚀 PERFORMANCE & OPTIMIZATION
+1. **CLI Backend Optimizations**
+   - Add batch operations (GetItems, CreateItems) to reduce process spawning
+   - Implement status caching (5s TTL) to avoid repeated subprocess calls
+   - Explore bw/op server mode for persistent connections
+   - Reduce N+1 query patterns in ListItems operations
+2. **SDK Backend Improvements**
+   - Document concurrency safety guarantees
+   - Add connection pooling for high-concurrency scenarios
+   - Implement request batching where supported
+3. **Pagination Support**
+   - Add ListOptions with Limit/Offset/Filter to ListItems()
+   - Prevent memory issues with large item collections
+   - Support streaming/cursor-based pagination for large datasets
+
+### v0.4.1 ✅ TESTING & QUALITY
+1. **Test Coverage Improvements** (Target: 80%+ all backends)
+   - Add CLI backend integration tests (conditional on CLI availability)
+   - Add concurrent access tests with race detector
+   - Add context cancellation tests for all operations
+   - Add error path testing for all backends
+2. **Benchmarking**
+   - Add performance benchmarks for all backends
+   - Document performance characteristics
+   - Establish performance regression testing
+3. **Documentation**
+   - Document concurrency safety per backend
+   - Add performance comparison guide
+   - Add security best practices guide
+
+### v0.5.0 📦 NEW BACKENDS
 1. **HashiCorp Vault** - Enterprise option
-2. Dynamic secret support exploration
+2. **KeePassXC** - Open source file-based option
+3. Dynamic secret support exploration
+4. Additional enterprise managers (Keeper, Doppler)
 
-### v0.5.0
-1. **KeePassXC** - Open source file-based option
-2. Additional enterprise managers (Keeper, Doppler)
+### v0.6.0 ✨ API ENHANCEMENTS
+1. **Enhanced Session Management**
+   - Fix Session.Token() to accept context parameter
+   - Implement session refresh notifications
+   - Add session expiration callbacks
+2. **Advanced Features**
+   - Secret versioning API (where supported)
+   - Secret rotation helpers
+   - Audit logging hooks
+   - Metadata/tags support
+3. **Developer Experience**
+   - Add OpenTelemetry tracing support
+   - Improve error messages with remediation hints
+   - Add CLI tool for interactive vault operations
 
-### Future
-- Additional enterprise managers
+### Future Considerations
+- Additional enterprise managers (Doppler, Keeper Security, Dashlane)
 - Consumer managers (if demand exists)
-- Advanced features (secret rotation, versioning APIs)
+- Multi-vault orchestration (read from multiple backends simultaneously)
+- Secret synchronization between backends
+- Encryption wrapper backends (encrypt-then-store patterns)
 
 ---
 
@@ -699,4 +755,4 @@ Have a backend you'd like to see supported? [Open an issue](https://github.com/b
 ---
 
 **Last Updated:** 2025-12-08
-**Current Version:** v0.2.0 (released)
+**Current Version:** v0.3.2 (released)
