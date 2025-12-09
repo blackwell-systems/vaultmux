@@ -435,7 +435,10 @@ Contributions welcome! Please:
 
 ## License
 
-Apache License 2.0 - see [LICENSE](LICENSE) for details
+**Versions >= v0.3.2**: Apache License 2.0
+**Versions <= v0.3.0**: MIT License
+
+See [LICENSE](LICENSE) for full Apache 2.0 text.
 
 ## Brand
 

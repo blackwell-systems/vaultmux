@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-12-08
+
+### Changed
+
+- **License** - Changed from MIT License to Apache License 2.0
+  - LICENSE file updated to Apache License 2.0
+  - All documentation and badges updated (README.md, BRAND.md, etc.)
+  - Provides additional patent protection and contributor license terms
+  - Code remains free and open source
+  - Effective starting with v0.3.2 and all future releases
+  - Version note added to README: v0.3.2+ is Apache 2.0, v0.3.0 and earlier is MIT
+
+### Note
+
+- This release formalizes the license change to Apache 2.0 for Go module immutability
+
 ## [0.3.1] - 2025-12-08
 
 ### Added
@@ -23,12 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **License** - Changed from MIT License to Apache License 2.0
-  - LICENSE file updated to Apache License 2.0
-  - All documentation and badges updated (README.md, BRAND.md, etc.)
-  - Provides additional patent protection and contributor license terms
-  - Code remains free and open source
-  - Effective starting with v0.3.1 and all future releases
 - **Documentation Site** - Enhanced sidebar navigation
   - Added Testing section between Extending and Roadmap
   - Testing Guide with detailed subsections (Philosophy, Quick Start, Backend Strategies, etc.)
@@ -242,7 +252,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.1...HEAD
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.1.0...v0.2.0

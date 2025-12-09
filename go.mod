@@ -2,6 +2,8 @@ module github.com/blackwell-systems/vaultmux
 
 go 1.24.0
 
+retract v0.3.1 // Published with license change; use v0.3.2+
+
 // No external dependencies - stdlib only
 
 require (
