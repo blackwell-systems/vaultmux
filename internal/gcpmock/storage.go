@@ -167,13 +167,11 @@ func (s *Storage) ListSecrets(ctx context.Context, parent string, pageSize int32
 		results = allSecrets[startIdx:endIdx]
 	}
 
-	// Generate next page token
-	var nextToken string
+	// Generate next page token if there are more results
 	if endIdx < len(allSecrets) {
-		nextToken = fmt.Sprintf("%d", endIdx)
+		return results, fmt.Sprintf("%d", endIdx), nil
 	}
-
-	return results, nextToken, nil
+	return results, "", nil
 }
 
 // DeleteSecret deletes a secret and all its versions.
