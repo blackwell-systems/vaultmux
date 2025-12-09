@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/blackwell-systems/vaultmux"
@@ -19,10 +20,38 @@ func init() {
 	})
 }
 
+// statusCache caches the result of IsAuthenticated checks to reduce subprocess overhead.
+type statusCache struct {
+	authenticated bool
+	timestamp     time.Time
+	mu            sync.RWMutex
+}
+
+// get returns the cached status if still valid (within TTL).
+func (s *statusCache) get(ttl time.Duration) (bool, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if time.Since(s.timestamp) < ttl {
+		return s.authenticated, true // cached result is valid
+	}
+	return false, false // cache expired
+}
+
+// set updates the cached status with current timestamp.
+func (s *statusCache) set(authenticated bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.authenticated = authenticated
+	s.timestamp = time.Now()
+}
+
 // Backend implements vaultmux.Backend for pass.
 type Backend struct {
-	storePath string
-	prefix    string
+	storePath   string
+	prefix      string
+	statusCache statusCache // Caches IsAuthenticated results
 }
 
 // New creates a new pass backend.
@@ -70,9 +99,19 @@ func (b *Backend) Init(ctx context.Context) error {
 func (b *Backend) Close() error { return nil }
 
 // IsAuthenticated checks if pass can list items (GPG agent is available).
+// Results are cached for 5 seconds to reduce subprocess overhead.
 func (b *Backend) IsAuthenticated(ctx context.Context) bool {
+	// Check cache first (5 second TTL)
+	if result, valid := b.statusCache.get(5 * time.Second); valid {
+		return result
+	}
+
 	cmd := exec.CommandContext(ctx, "pass", "ls")
-	return cmd.Run() == nil
+	authenticated := cmd.Run() == nil
+
+	// Cache the result
+	b.statusCache.set(authenticated)
+	return authenticated
 }
 
 // Authenticate returns a no-op session since pass uses GPG agent.
@@ -81,6 +120,10 @@ func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
 	if !b.IsAuthenticated(ctx) {
 		return nil, vaultmux.ErrNotAuthenticated
 	}
+
+	// Update status cache since authentication was verified
+	b.statusCache.set(true)
+
 	return &passSession{}, nil
 }
 

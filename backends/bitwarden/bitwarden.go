@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/blackwell-systems/vaultmux"
@@ -20,10 +21,38 @@ func init() {
 	})
 }
 
+// statusCache caches the result of IsAuthenticated checks to reduce subprocess overhead.
+type statusCache struct {
+	authenticated bool
+	timestamp     time.Time
+	mu            sync.RWMutex
+}
+
+// get returns the cached status if still valid (within TTL).
+func (s *statusCache) get(ttl time.Duration) (bool, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if time.Since(s.timestamp) < ttl {
+		return s.authenticated, true // cached result is valid
+	}
+	return false, false // cache expired
+}
+
+// set updates the cached status with current timestamp.
+func (s *statusCache) set(authenticated bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.authenticated = authenticated
+	s.timestamp = time.Now()
+}
+
 // Backend implements vaultmux.Backend for Bitwarden CLI.
 type Backend struct {
 	sessionFile string
 	cache       *vaultmux.SessionCache
+	statusCache statusCache // Caches IsAuthenticated results
 }
 
 // New creates a new Bitwarden backend.
@@ -54,17 +83,28 @@ func (b *Backend) Init(ctx context.Context) error {
 func (b *Backend) Close() error { return nil }
 
 // IsAuthenticated checks if there's a valid session.
+// Results are cached for 5 seconds to reduce subprocess overhead.
 func (b *Backend) IsAuthenticated(ctx context.Context) bool {
+	// Check cache first (5 second TTL)
+	if result, valid := b.statusCache.get(5 * time.Second); valid {
+		return result
+	}
+
 	// Try loading cached session
 	cached, err := b.cache.Load()
 	if err != nil || cached == nil {
+		b.statusCache.set(false)
 		return false
 	}
 
 	// Verify with bw status
 	cmd := exec.CommandContext(ctx, "bw", "unlock", "--check")
 	cmd.Env = append(os.Environ(), "BW_SESSION="+cached.Token)
-	return cmd.Run() == nil
+	authenticated := cmd.Run() == nil
+
+	// Cache the result
+	b.statusCache.set(authenticated)
+	return authenticated
 }
 
 // Authenticate unlocks the Bitwarden vault and returns a session.
@@ -104,6 +144,9 @@ func (b *Backend) Authenticate(ctx context.Context) (vaultmux.Session, error) {
 
 	// Cache the session
 	_ = b.cache.Save(token, "bitwarden")
+
+	// Update status cache since we just authenticated
+	b.statusCache.set(true)
 
 	return &bwSession{token: token, backend: b}, nil
 }
