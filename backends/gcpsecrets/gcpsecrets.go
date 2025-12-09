@@ -17,7 +17,9 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
 	"github.com/blackwell-systems/vaultmux"
@@ -112,10 +114,12 @@ func (b *Backend) Init(ctx context.Context) error {
 func (b *Backend) initGCPClient(ctx context.Context) error {
 	var opts []option.ClientOption
 
-	// Custom endpoint for testing (e.g., fake-gcp-server)
+	// Custom endpoint for testing (e.g., gcp-secret-manager-mock)
 	if b.endpoint != "" {
 		opts = append(opts, option.WithEndpoint(b.endpoint))
-		opts = append(opts, option.WithoutAuthentication()) // Skip auth for fake servers
+		opts = append(opts, option.WithoutAuthentication()) // Skip auth for mock servers
+		// Use insecure transport for local mock servers (no TLS)
+		opts = append(opts, option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
 	}
 
 	client, err := secretmanager.NewClient(ctx, opts...)

@@ -26,15 +26,28 @@ import (
 // Note: Unlike AWS (LocalStack) or Windows (WSL2), GCP has no good local emulator.
 // These tests require a real GCP project or will skip gracefully.
 func TestIntegration(t *testing.T) {
+	// Check for mock endpoint first (for testing without real GCP)
+	endpoint := os.Getenv("GCP_MOCK_ENDPOINT")
 	projectID := os.Getenv("GCP_PROJECT_ID")
-	if projectID == "" {
-		t.Skip("GCP_PROJECT_ID not set - skipping integration tests")
+
+	if endpoint == "" && projectID == "" {
+		t.Skip("Neither GCP_MOCK_ENDPOINT nor GCP_PROJECT_ID set - skipping integration tests")
 	}
 
-	backend, err := New(map[string]string{
+	// Default project for mock testing
+	if projectID == "" {
+		projectID = "test-project"
+	}
+
+	options := map[string]string{
 		"project_id": projectID,
 		"prefix":     "test-vaultmux-",
-	}, "")
+	}
+	if endpoint != "" {
+		options["endpoint"] = endpoint
+	}
+
+	backend, err := New(options, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,15 +252,26 @@ func TestIntegration(t *testing.T) {
 
 // TestIntegration_Pagination tests that large secret collections are handled correctly.
 func TestIntegration_Pagination(t *testing.T) {
+	endpoint := os.Getenv("GCP_MOCK_ENDPOINT")
 	projectID := os.Getenv("GCP_PROJECT_ID")
-	if projectID == "" {
-		t.Skip("GCP_PROJECT_ID not set - skipping pagination test")
+
+	if endpoint == "" && projectID == "" {
+		t.Skip("Neither GCP_MOCK_ENDPOINT nor GCP_PROJECT_ID set - skipping pagination test")
 	}
 
-	backend, err := New(map[string]string{
+	if projectID == "" {
+		projectID = "pagination-test-project"
+	}
+
+	options := map[string]string{
 		"project_id": projectID,
 		"prefix":     "pagination-test-",
-	}, "")
+	}
+	if endpoint != "" {
+		options["endpoint"] = endpoint
+	}
+
+	backend, err := New(options, "")
 	if err != nil {
 		t.Fatal(err)
 	}

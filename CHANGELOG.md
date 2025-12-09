@@ -41,6 +41,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Test execution time: ~3-5 seconds in CI environment
   - TESTING.md documentation updated with complete CI workflow details
 
+- **GCP Backend CI Integration** - Custom mock server for Secret Manager API testing
+  - Built custom gRPC mock server implementing GCP Secret Manager API
+  - Dedicated `integration-gcp` job in GitHub Actions workflow
+  - Mock server implements 6 core API methods (CreateSecret, GetSecret, AddSecretVersion, AccessSecretVersion, ListSecrets, DeleteSecret)
+  - Coverage increased from ~15% to 80.0% for GCP backend
+  - No GCP credentials or costs required for CI testing
+  - Mock server designed as extraction-ready standalone project
+  - Test execution time: <1 second for full suite
+  - Supports real GCP SDK client with custom endpoint configuration
+  - Thread-safe in-memory storage with comprehensive test coverage
+  - Includes unit tests, integration tests with GCP SDK, and vaultmux backend tests
+  - Docker image available (Dockerfile.gcpmock) for containerized testing
+  - Documentation added to TESTING.md and gcp-mock-secret-server.md
+
 ## [0.3.3] - 2025-12-08
 
 ### Security

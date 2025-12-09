@@ -117,22 +117,79 @@ docker stop vaultmux-localstack
 - Works in CI/CD pipelines
 - Tests real AWS SDK code paths
 
-#### GCP Secret Manager
+#### GCP Secret Manager + Mock Server
 
-GCP tests follow a similar pattern but without a local emulator:
+GCP Secret Manager testing uses a custom-built mock server that implements the gRPC API.
 
-**Unit Tests** (always run):
+**Setup GCP Mock Server:**
+
 ```bash
-go test ./backends/gcpsecrets/
+# Option 1: Run from source
+go run ./cmd/gcp-secret-manager-mock --port 9090
+
+# Option 2: Build and run binary
+go build -o gcp-mock ./cmd/gcp-secret-manager-mock
+./gcp-mock --port 9090
+
+# Option 3: Use Docker
+docker build -f Dockerfile.gcpmock -t gcp-mock:latest .
+docker run -d -p 9090:9090 --name gcp-mock gcp-mock:latest
 ```
 
-**Integration Tests** (requires GCP project):
+**Run Integration Tests:**
+
+```bash
+# Point GCP SDK to mock server
+GCP_MOCK_ENDPOINT=localhost:9090 \
+go test -v ./backends/gcpsecrets/
+
+# Expected output:
+# PASS: TestIntegration (0.01s)
+# PASS: TestIntegration_Pagination (0.01s)
+# ok    github.com/blackwell-systems/vaultmux/backends/gcpsecrets    0.034s
+```
+
+**Cleanup:**
+
+```bash
+# If using Docker
+docker stop gcp-mock
+
+# If using binary, Ctrl+C or:
+pkill gcp-secret-manager-mock
+```
+
+**What Gets Tested:**
+
+- ✅ Backend initialization and connection
+- ✅ Authentication (mock mode, no real credentials)
+- ✅ CRUD operations (Create, Get, Update, Delete)
+- ✅ Secret listing
+- ✅ Pagination handling
+- ✅ Error handling (ErrNotFound, ErrAlreadyExists)
+- ✅ Version management (latest alias resolution)
+- ✅ Metadata handling
+
+**Benefits of Mock Server:**
+
+- No GCP credentials required
+- No GCP costs
+- Fast test execution (<1 second)
+- Deterministic results
+- Works in CI/CD pipelines
+- Tests real gRPC SDK code paths
+- Extraction-ready as standalone project
+
+**Integration Tests with Real GCP** (optional):
+
+If you want to test against real GCP Secret Manager:
+
 ```bash
 # Set GCP credentials
 export GCP_PROJECT_ID=your-project-id
 export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
-# Run integration tests
+# Run integration tests (will use real GCP, not mock)
 go test -v ./backends/gcpsecrets/
 ```
 
@@ -201,11 +258,12 @@ The CI pipeline runs:
 
 1. **Unit Tests** - All backends, all platforms (Ubuntu, macOS, Windows)
 2. **Integration Tests (AWS)** - Dedicated job with LocalStack service container
-3. **Linting** - golangci-lint with 5-minute timeout
-4. **Build Verification** - Ensures all packages compile
-5. **Format Check** - Validates gofmt compliance
-6. **Go Vet** - Static analysis for common errors
-7. **Coverage** - Reports to Codecov (unit + AWS integration)
+3. **Integration Tests (GCP)** - Dedicated job with custom mock server
+4. **Linting** - golangci-lint with 5-minute timeout
+5. **Build Verification** - Ensures all packages compile
+6. **Format Check** - Validates gofmt compliance
+7. **Go Vet** - Static analysis for common errors
+8. **Coverage** - Reports to Codecov (unit + AWS + GCP integration)
 
 **AWS Integration Test Job**:
 
@@ -255,6 +313,57 @@ integration-aws:
 ```
 
 **Coverage Impact**: AWS backend coverage increased from 23.7% to 79.1% with LocalStack integration tests running in CI.
+
+**GCP Integration Test Job**:
+
+The CI workflow includes a dedicated `integration-gcp` job that runs GCP backend tests against a custom mock server:
+
+```yaml
+integration-gcp:
+  name: GCP Integration Tests (Mock)
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+
+    - name: Build GCP mock server
+      run: |
+        go build -o gcp-mock ./cmd/gcp-secret-manager-mock
+
+    - name: Start GCP mock server
+      run: |
+        ./gcp-mock --port 9090 > gcp-mock.log 2>&1 &
+        echo $! > gcp-mock.pid
+        sleep 2
+
+    - name: Run GCP integration tests
+      env:
+        GCP_MOCK_ENDPOINT: localhost:9090
+      run: |
+        go test -v -race -coverprofile=coverage-gcp.out ./backends/gcpsecrets/
+        go tool cover -func=coverage-gcp.out | grep total
+
+    - name: Stop GCP mock server
+      if: always()
+      run: kill $(cat gcp-mock.pid) 2>/dev/null || true
+
+    - name: Upload GCP coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage-gcp.out
+        flags: integration-gcp
+```
+
+**Coverage Impact**: GCP backend coverage increased from ~15% to 80.0% with mock server integration tests running in CI.
+
+**Why Build a Custom Mock?**: Unlike AWS (which has LocalStack), Google doesn't provide an official Secret Manager emulator. Our custom gRPC mock server:
+- Implements the official Secret Manager API (6 core methods)
+- Zero external dependencies beyond official GCP proto types
+- Designed for extraction as standalone project
+- Tested with real GCP SDK client
+- Fast execution (<1 second for full test suite)
 
 ## Coverage Goals
 

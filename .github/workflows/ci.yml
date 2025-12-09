@@ -171,3 +171,59 @@ jobs:
           file: ./coverage-aws.out
           flags: integration-aws
           fail_ci_if_error: false
+
+  integration-gcp:
+    name: GCP Integration Tests (Mock)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build GCP mock server
+        run: |
+          echo "Building GCP Secret Manager mock server..."
+          go build -o gcp-mock ./cmd/gcp-secret-manager-mock
+          echo "Built successfully"
+
+      - name: Start GCP mock server
+        run: |
+          echo "Starting GCP mock server on port 9090..."
+          ./gcp-mock --port 9090 > gcp-mock.log 2>&1 &
+          MOCK_PID=$!
+          echo $MOCK_PID > gcp-mock.pid
+          echo "Started with PID: $MOCK_PID"
+          sleep 2
+          if ps -p $MOCK_PID > /dev/null; then
+            echo "GCP mock server is running"
+            cat gcp-mock.log
+          else
+            echo "Failed to start GCP mock server"
+            cat gcp-mock.log
+            exit 1
+          fi
+
+      - name: Run GCP integration tests
+        env:
+          GCP_MOCK_ENDPOINT: localhost:9090
+        run: |
+          go test -v -race -coverprofile=coverage-gcp.out ./backends/gcpsecrets/
+          go tool cover -func=coverage-gcp.out | grep total
+
+      - name: Stop GCP mock server
+        if: always()
+        run: |
+          if [ -f gcp-mock.pid ]; then
+            kill $(cat gcp-mock.pid) 2>/dev/null || true
+          fi
+
+      - name: Upload GCP coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage-gcp.out
+          flags: integration-gcp
+          fail_ci_if_error: false
