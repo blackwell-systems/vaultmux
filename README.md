@@ -36,17 +36,29 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 
 ## Why Vaultmux?
 
-Vaultmux was created to solve a real-world problem: **building a dotfiles framework that works for everyone**.
+**The Problem**: Applications that hardcode a single secret management backend lock users into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares—you end up writing the same logic multiple times with different method signatures, error handling, and authentication patterns.
 
-When managing dotfiles across teams or open source projects, different users have different secret management preferences:
-- Some prefer local tools like `pass` (GPG-based, offline)
-- Others use commercial tools like 1Password or Bitwarden
-- Cloud-native users want AWS Secrets Manager, Google Cloud, or Azure
-- Windows users rely on Windows Credential Manager
+**The Solution**: Vaultmux provides a unified API that eliminates repetition. Write your secret management code once, and it works with any backend. Users choose their preferred system without you writing backend-specific code.
 
-**The Problem**: Writing application logic that hardcodes a single backend locks you into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares.
+### Common Use Cases
 
-**The Solution**: Vaultmux provides a single, unified API that works with any backend. Write your code once, and users can choose their preferred secret management system without touching your application code.
+**Multi-Cloud Deployments**
+- Deploy to AWS, GCP, and Azure without rewriting secret access logic
+- Switch between AWS Secrets Manager, Google Cloud Secret Manager, and Azure Key Vault with a config change
+
+**Cross-Platform Applications**
+- Support Windows Credential Manager on Windows, pass on Linux, and 1Password on macOS
+- One codebase works everywhere
+
+**Team Flexibility**
+- Open source projects where contributors use different secret managers
+- Enterprise environments with mixed tooling (some teams on 1Password, others on HashiCorp Vault)
+- Migration scenarios (moving from Bitwarden to AWS Secrets Manager)
+
+**Development Workflows**
+- Use `pass` locally for development, AWS Secrets Manager in production
+- Test with mock backend, deploy with real cloud provider
+- No code changes required—just configuration
 
 ```go
 // Same code works with pass, Bitwarden, 1Password, AWS, GCP, Azure, etc.
