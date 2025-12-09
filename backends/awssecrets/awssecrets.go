@@ -235,10 +235,10 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 			})
 		}
 
-		nextToken = result.NextToken
-		if nextToken == nil {
+		if result.NextToken == nil {
 			break
 		}
+		nextToken = result.NextToken
 	}
 
 	return items, nil
