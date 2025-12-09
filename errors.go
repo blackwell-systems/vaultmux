@@ -1,6 +1,9 @@
 package vaultmux
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // BackendError wraps errors with backend context.
 type BackendError struct {
@@ -21,6 +24,12 @@ func (e *BackendError) Error() string {
 // Unwrap returns the underlying error.
 func (e *BackendError) Unwrap() error {
 	return e.Err
+}
+
+// Is checks if the wrapped error matches the target error.
+// This allows errors.Is() to work through BackendError wrappers.
+func (e *BackendError) Is(target error) bool {
+	return errors.Is(e.Err, target)
 }
 
 // WrapError wraps an error with backend context.

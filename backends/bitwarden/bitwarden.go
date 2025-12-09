@@ -120,6 +120,10 @@ func (b *Backend) Sync(ctx context.Context, session vaultmux.Session) error {
 
 // GetItem retrieves a vault item by name.
 func (b *Backend) GetItem(ctx context.Context, name string, session vaultmux.Session) (*vaultmux.Item, error) {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return nil, vaultmux.WrapError("bitwarden", "get", name, err)
+	}
+
 	cmd := exec.CommandContext(ctx, "bw", "get", "item", name)
 	cmd.Env = append(os.Environ(), "BW_SESSION="+session.Token())
 	out, err := cmd.Output()
@@ -223,6 +227,10 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 
 // CreateItem creates a new secure note.
 func (b *Backend) CreateItem(ctx context.Context, name, content string, session vaultmux.Session) error {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return vaultmux.WrapError("bitwarden", "create", name, err)
+	}
+
 	// Create JSON template
 	template := map[string]interface{}{
 		"type":  2, // Secure note
@@ -348,6 +356,10 @@ func (b *Backend) LocationExists(ctx context.Context, name string, session vault
 
 // CreateLocation creates a new folder.
 func (b *Backend) CreateLocation(ctx context.Context, name string, session vaultmux.Session) error {
+	if err := vaultmux.ValidateLocationName(name); err != nil {
+		return vaultmux.WrapError("bitwarden", "create-folder", name, err)
+	}
+
 	template := map[string]interface{}{
 		"name": name,
 	}

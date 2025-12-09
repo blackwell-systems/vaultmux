@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -24,10 +25,13 @@ type CachedSession struct {
 }
 
 // NewSessionCache creates a session cache.
+// The parent directory is created with 0700 permissions for security.
 func NewSessionCache(path string, ttl time.Duration) *SessionCache {
-	// Ensure parent directory exists
+	// Ensure parent directory exists with restricted permissions
 	dir := filepath.Dir(path)
-	_ = os.MkdirAll(dir, 0755)
+	// Ignore error here since this is initialization; actual errors
+	// will surface during Load() or Save() operations
+	_ = os.MkdirAll(dir, 0700)
 
 	return &SessionCache{
 		path: path,
@@ -47,13 +51,14 @@ func (c *SessionCache) Load() (*CachedSession, error) {
 
 	var session CachedSession
 	if err := json.Unmarshal(data, &session); err != nil {
-		// Invalid cache - remove it
+		// Invalid cache - try to remove it (ignore removal errors)
 		_ = os.Remove(c.path)
-		return nil, nil
+		return nil, fmt.Errorf("parse session cache: %w", err)
 	}
 
 	// Check if expired
 	if time.Now().After(session.Expires) {
+		// Remove expired session (ignore removal errors)
 		_ = os.Remove(c.path)
 		return nil, nil
 	}
@@ -62,7 +67,14 @@ func (c *SessionCache) Load() (*CachedSession, error) {
 }
 
 // Save writes a session to disk.
+// The session file is created with 0600 permissions (owner read/write only).
 func (c *SessionCache) Save(token, backend string) error {
+	// Ensure directory exists with restrictive permissions before writing
+	dir := filepath.Dir(c.path)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("create session directory: %w", err)
+	}
+
 	now := time.Now()
 	session := CachedSession{
 		Token:   token,
@@ -76,7 +88,7 @@ func (c *SessionCache) Save(token, backend string) error {
 		return fmt.Errorf("marshal session: %w", err)
 	}
 
-	// Write with restricted permissions
+	// Write with restricted permissions (0600 = owner read/write only)
 	if err := os.WriteFile(c.path, data, 0600); err != nil {
 		return fmt.Errorf("write session cache: %w", err)
 	}
@@ -94,9 +106,11 @@ func (c *SessionCache) Clear() error {
 }
 
 // AutoRefreshSession wraps a session with automatic refresh capability.
+// It is safe for concurrent use by multiple goroutines.
 type AutoRefreshSession struct {
 	inner   Session
 	backend Backend
+	mu      sync.Mutex // Protects concurrent access to Token() and Refresh()
 }
 
 // NewAutoRefreshSession creates a session that auto-refreshes when expired.
@@ -108,7 +122,11 @@ func NewAutoRefreshSession(session Session, backend Backend) Session {
 }
 
 // Token returns the session token, refreshing if needed.
+// This method is safe for concurrent use.
 func (s *AutoRefreshSession) Token() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	ctx := context.Background()
 	if !s.inner.IsValid(ctx) {
 		// Attempt refresh
@@ -127,7 +145,10 @@ func (s *AutoRefreshSession) IsValid(ctx context.Context) bool {
 }
 
 // Refresh delegates to the inner session.
+// This method is safe for concurrent use.
 func (s *AutoRefreshSession) Refresh(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return s.inner.Refresh(ctx)
 }
 

@@ -106,6 +106,10 @@ func (b *Backend) Sync(ctx context.Context, session vaultmux.Session) error {
 
 // GetItem retrieves a vault item by name.
 func (b *Backend) GetItem(ctx context.Context, name string, session vaultmux.Session) (*vaultmux.Item, error) {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return nil, vaultmux.WrapError("1password", "get", name, err)
+	}
+
 	cmd := exec.CommandContext(ctx, "op", "item", "get", name, "--format", "json")
 	cmd.Env = b.sessionEnv(session)
 
@@ -215,6 +219,10 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 
 // CreateItem creates a new secure note.
 func (b *Backend) CreateItem(ctx context.Context, name, content string, session vaultmux.Session) error {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return vaultmux.WrapError("1password", "create", name, err)
+	}
+
 	cmd := exec.CommandContext(ctx, "op", "item", "create",
 		"--category", "Secure Note",
 		"--title", name,
@@ -230,6 +238,10 @@ func (b *Backend) CreateItem(ctx context.Context, name, content string, session 
 
 // UpdateItem updates an existing item's notes.
 func (b *Backend) UpdateItem(ctx context.Context, name, content string, session vaultmux.Session) error {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return vaultmux.WrapError("1password", "update", name, err)
+	}
+
 	cmd := exec.CommandContext(ctx, "op", "item", "edit", name,
 		fmt.Sprintf("notesPlain=%s", content))
 	cmd.Env = b.sessionEnv(session)
@@ -243,6 +255,10 @@ func (b *Backend) UpdateItem(ctx context.Context, name, content string, session 
 
 // DeleteItem deletes an item.
 func (b *Backend) DeleteItem(ctx context.Context, name string, session vaultmux.Session) error {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return vaultmux.WrapError("1password", "delete", name, err)
+	}
+
 	cmd := exec.CommandContext(ctx, "op", "item", "delete", name)
 	cmd.Env = b.sessionEnv(session)
 
@@ -297,6 +313,10 @@ func (b *Backend) LocationExists(ctx context.Context, name string, session vault
 
 // CreateLocation creates a new vault.
 func (b *Backend) CreateLocation(ctx context.Context, name string, session vaultmux.Session) error {
+	if err := vaultmux.ValidateLocationName(name); err != nil {
+		return vaultmux.WrapError("1password", "create-vault", name, err)
+	}
+
 	cmd := exec.CommandContext(ctx, "op", "vault", "create", name)
 	cmd.Env = b.sessionEnv(session)
 

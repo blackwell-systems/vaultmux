@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2025-12-08
+
+### Security
+
+- **Command Injection Prevention** - Added input validation to all CLI backends
+  - New ValidateItemName() function prevents shell metacharacter injection
+  - Validates item names before passing to CLI commands (Bitwarden, 1Password, pass)
+  - Blocks dangerous characters: ; | & $ ` < > ( ) { } [ ] ! * ? ~ # @ % ^ \ " '
+  - Blocks control characters and null bytes
+  - Maximum name length enforced (256 characters)
+  - Applied to all GetItem, CreateItem, UpdateItem, DeleteItem, and CreateLocation methods
+  - Protects against command chaining, variable expansion, and subshell execution
+  - Comprehensive test suite with 40+ test cases including real-world secret names
+
+- **Session File Permissions Hardening**
+  - Session cache directories now created with 0700 permissions (owner access only)
+  - Session cache files written with 0600 permissions (owner read/write only)
+  - Prevents unauthorized access to cached session tokens
+  - Directory creation errors now properly returned instead of silently ignored
+  - Improved security for multi-user systems
+
+- **Race Condition Fix** - AutoRefreshSession is now thread-safe
+  - Added sync.Mutex to protect concurrent Token() and Refresh() calls
+  - Prevents race conditions when multiple goroutines access the same session
+  - All methods documented as safe for concurrent use
+  - Verified with go test -race
+
+### Fixed
+
+- **Error Handling** - BackendError now implements errors.Is()
+  - Allows errors.Is() to work through BackendError wrappers
+  - Fixes error checking for sentinel errors (ErrNotFound, ErrAlreadyExists, etc.)
+  - Example: `errors.Is(wrappedErr, vaultmux.ErrNotFound)` now works correctly
+  - Improved error wrapping consistency across all backends
+
+- **Session Cache** - Invalid JSON now returns error instead of silent nil
+  - Corrupted session files are detected and reported
+  - Invalid files are removed automatically
+  - Test updated to expect error for better security posture
+
+### Changed
+
+- **Error Messages** - Improved error context in session operations
+  - Parse errors now include "parse session cache" context
+  - Directory creation errors include full context
+  - Better debugging information for session-related failures
+
 ## [0.3.2] - 2025-12-08
 
 ### Changed
@@ -252,7 +299,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.2...HEAD
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.2.0...v0.3.0

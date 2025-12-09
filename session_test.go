@@ -117,8 +117,10 @@ func TestSessionCache_InvalidJSON(t *testing.T) {
 
 	cache := NewSessionCache(sessionFile, 30*time.Minute)
 	session, err := cache.Load()
-	if err != nil {
-		t.Errorf("Load() error = %v, want nil (should handle gracefully)", err)
+
+	// Should return error for invalid JSON (security: don't silently ignore corruption)
+	if err == nil {
+		t.Error("Load() error = nil, want error for invalid JSON")
 	}
 	if session != nil {
 		t.Errorf("Load() = %v, want nil for invalid JSON", session)

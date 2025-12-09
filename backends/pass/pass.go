@@ -120,6 +120,10 @@ func (b *Backend) GetItem(ctx context.Context, name string, _ vaultmux.Session) 
 
 // GetNotes retrieves the content of an item.
 func (b *Backend) GetNotes(ctx context.Context, name string, _ vaultmux.Session) (string, error) {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return "", vaultmux.WrapError("pass", "get", name, err)
+	}
+
 	path := b.itemPath(name)
 	cmd := exec.CommandContext(ctx, "pass", "show", path)
 	out, err := cmd.Output()
@@ -223,6 +227,10 @@ func (b *Backend) UpdateItem(ctx context.Context, name, content string, _ vaultm
 
 // DeleteItem removes an item.
 func (b *Backend) DeleteItem(ctx context.Context, name string, _ vaultmux.Session) error {
+	if err := vaultmux.ValidateItemName(name); err != nil {
+		return vaultmux.WrapError("pass", "delete", name, err)
+	}
+
 	path := b.itemPath(name)
 	cmd := exec.CommandContext(ctx, "pass", "rm", "-f", path)
 	if err := cmd.Run(); err != nil {
@@ -265,6 +273,10 @@ func (b *Backend) LocationExists(ctx context.Context, name string, _ vaultmux.Se
 
 // CreateLocation creates a new location (directory).
 func (b *Backend) CreateLocation(ctx context.Context, name string, _ vaultmux.Session) error {
+	if err := vaultmux.ValidateLocationName(name); err != nil {
+		return vaultmux.WrapError("pass", "create-location", name, err)
+	}
+
 	path := filepath.Join(b.storePath, b.prefix, name)
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return vaultmux.WrapError("pass", "create-location", name, err)
