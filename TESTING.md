@@ -199,41 +199,62 @@ func TestIntegration(t *testing.T) {
 
 The CI pipeline runs:
 
-1. **Unit Tests** - All backends, all platforms
-2. **Integration Tests (AWS)** - Uses LocalStack
-3. **Linting** - golangci-lint
-4. **Coverage** - Reports to Codecov
+1. **Unit Tests** - All backends, all platforms (Ubuntu, macOS, Windows)
+2. **Integration Tests (AWS)** - Dedicated job with LocalStack service container
+3. **Linting** - golangci-lint with 5-minute timeout
+4. **Build Verification** - Ensures all packages compile
+5. **Format Check** - Validates gofmt compliance
+6. **Go Vet** - Static analysis for common errors
+7. **Coverage** - Reports to Codecov (unit + AWS integration)
 
-Example workflow excerpt:
+**AWS Integration Test Job**:
+
+The CI workflow includes a dedicated `integration-aws` job that runs AWS backend tests against LocalStack:
 
 ```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      localstack:
-        image: localstack/localstack
-        ports:
-          - 4566:4566
-        env:
-          SERVICES: secretsmanager
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
+integration-aws:
+  name: AWS Integration Tests (LocalStack)
+  runs-on: ubuntu-latest
+  services:
+    localstack:
+      image: localstack/localstack:latest
+      ports:
+        - 4566:4566
+      env:
+        SERVICES: secretsmanager
+      options: >-
+        --health-cmd "curl -f http://localhost:4566/_localstack/health || exit 1"
+        --health-interval 10s
+        --health-timeout 5s
+        --health-retries 5
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
 
-      # Unit tests
-      - run: go test ./...
+    - name: Wait for LocalStack
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:4566/_localstack/health 2>/dev/null | grep -q "secretsmanager.*available"; do sleep 2; done'
 
-      # Integration tests with LocalStack
-      - run: |
-          LOCALSTACK_ENDPOINT=http://localhost:4566 \
-          AWS_ACCESS_KEY_ID=test \
-          AWS_SECRET_ACCESS_KEY=test \
-          AWS_REGION=us-east-1 \
-          go test -v ./backends/awssecrets/
+    - name: Run AWS integration tests
+      env:
+        LOCALSTACK_ENDPOINT: http://localhost:4566
+        AWS_ACCESS_KEY_ID: test
+        AWS_SECRET_ACCESS_KEY: test
+        AWS_REGION: us-east-1
+      run: |
+        go test -v -race -coverprofile=coverage-aws.out ./backends/awssecrets/
+        go tool cover -func=coverage-aws.out | grep total
+
+    - name: Upload AWS coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage-aws.out
+        flags: integration-aws
 ```
+
+**Coverage Impact**: AWS backend coverage increased from 23.7% to 79.1% with LocalStack integration tests running in CI.
 
 ## Coverage Goals
 

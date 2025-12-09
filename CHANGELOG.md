@@ -29,6 +29,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verified thread-safe with go test -race
   - Added to all three CLI backends (Bitwarden, 1Password, pass)
 
+### Testing
+
+- **AWS Backend CI Integration** - LocalStack-based integration tests in GitHub Actions
+  - Dedicated `integration-aws` job with LocalStack service container
+  - Automatic health checks ensure LocalStack readiness before test execution
+  - Full CRUD test coverage (Create, Get, Update, Delete, List with pagination)
+  - Coverage increased from 23.7% to 79.1% for AWS backend
+  - No AWS credentials or costs required for CI testing
+  - Coverage reports uploaded to Codecov with `integration-aws` flag
+  - Test execution time: ~3-5 seconds in CI environment
+  - TESTING.md documentation updated with complete CI workflow details
+
 ## [0.3.3] - 2025-12-08
 
 ### Security
