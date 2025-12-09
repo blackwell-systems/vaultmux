@@ -206,13 +206,15 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 
 	var items []*vaultmux.Item
 
-	for nextToken := (*string)(nil); ; {
+	// Paginate through all secrets
+	input := &secretsmanager.ListSecretsInput{
+		MaxResults: aws.Int32(100),
+	}
+
+	for {
 		// Note: LocalStack doesn't support wildcard filtering (e.g., "prefix/*")
 		// so we list all secrets and filter in Go code
-		result, err := b.client.ListSecrets(ctx, &secretsmanager.ListSecretsInput{
-			MaxResults: aws.Int32(100),
-			NextToken:  nextToken,
-		})
+		result, err := b.client.ListSecrets(ctx, input)
 		if err != nil {
 			return nil, b.handleAWSError(err, "list", "")
 		}
@@ -237,7 +239,7 @@ func (b *Backend) ListItems(ctx context.Context, session vaultmux.Session) ([]*v
 		if result.NextToken == nil {
 			break
 		}
-		nextToken = result.NextToken
+		input.NextToken = result.NextToken
 	}
 
 	return items, nil
