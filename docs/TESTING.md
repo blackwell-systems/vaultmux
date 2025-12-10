@@ -117,23 +117,24 @@ docker stop vaultmux-localstack
 - Works in CI/CD pipelines
 - Tests real AWS SDK code paths
 
-#### GCP Secret Manager + Mock Server
+#### GCP Secret Manager + Emulator
 
-GCP Secret Manager testing uses a custom-built mock server that implements the gRPC API.
+GCP Secret Manager testing uses the [gcp-secret-manager-emulator](https://github.com/blackwell-systems/gcp-secret-manager-emulator), a standalone package that implements the gRPC Secret Manager API.
 
-**Setup GCP Mock Server:**
+**Setup GCP Secret Manager Emulator:**
 
 ```bash
-# Option 1: Run from source
-go run ./cmd/gcp-secret-manager-mock --port 9090
+# Option 1: Install and run binary
+go install github.com/blackwell-systems/gcp-secret-manager-emulator/cmd/server@latest
+server --port 9090
 
-# Option 2: Build and run binary
-go build -o gcp-mock ./cmd/gcp-secret-manager-mock
-./gcp-mock --port 9090
+# Option 2: Use Docker (multi-arch: amd64, arm64)
+docker run -d -p 9090:9090 --name gcp-emulator \
+  ghcr.io/blackwell-systems/gcp-secret-manager-emulator:latest
 
-# Option 3: Use Docker
-docker build -f Dockerfile.gcpmock -t gcp-mock:latest .
-docker run -d -p 9090:9090 --name gcp-mock gcp-mock:latest
+# Option 3: Docker from Docker Hub (when available)
+docker run -d -p 9090:9090 --name gcp-emulator \
+  blackwellsystems/gcp-secret-manager-emulator:latest
 ```
 
 **Run Integration Tests:**
@@ -153,10 +154,10 @@ go test -v ./backends/gcpsecrets/
 
 ```bash
 # If using Docker
-docker stop gcp-mock
+docker stop gcp-emulator
 
 # If using binary, Ctrl+C or:
-pkill gcp-secret-manager-mock
+pkill server
 ```
 
 **What Gets Tested:**
@@ -170,7 +171,7 @@ pkill gcp-secret-manager-mock
 - ✅ Version management (latest alias resolution)
 - ✅ Metadata handling
 
-**Benefits of Mock Server:**
+**Benefits of Emulator:**
 
 - No GCP credentials required
 - No GCP costs
@@ -178,7 +179,9 @@ pkill gcp-secret-manager-mock
 - Deterministic results
 - Works in CI/CD pipelines
 - Tests real gRPC SDK code paths
-- Extraction-ready as standalone project
+- Standalone package - reusable across projects
+- Multi-architecture Docker images (amd64, arm64)
+- Actively maintained with comprehensive test coverage
 
 **Integration Tests with Real GCP** (optional):
 
@@ -316,11 +319,11 @@ integration-aws:
 
 **GCP Integration Test Job**:
 
-The CI workflow includes a dedicated `integration-gcp` job that runs GCP backend tests against a custom mock server:
+The CI workflow includes a dedicated `integration-gcp` job that runs GCP backend tests against the standalone GCP Secret Manager emulator:
 
 ```yaml
 integration-gcp:
-  name: GCP Integration Tests (Mock)
+  name: GCP Integration Tests (Emulator)
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
@@ -328,11 +331,14 @@ integration-gcp:
       with:
         go-version: '1.24'
 
-    - name: Build GCP mock server
+    - name: Install GCP Secret Manager emulator
       run: |
-        go build -o gcp-mock ./cmd/gcp-secret-manager-mock
+        echo "Installing GCP Secret Manager emulator..."
+        go install github.com/blackwell-systems/gcp-secret-manager-emulator/cmd/server@v0.1.0
+        mv ~/go/bin/server ./gcp-mock
+        echo "Installed successfully"
 
-    - name: Start GCP mock server
+    - name: Start GCP emulator
       run: |
         ./gcp-mock --port 9090 > gcp-mock.log 2>&1 &
         echo $! > gcp-mock.pid
@@ -345,7 +351,7 @@ integration-gcp:
         go test -v -race -coverprofile=coverage-gcp.out ./backends/gcpsecrets/
         go tool cover -func=coverage-gcp.out | grep total
 
-    - name: Stop GCP mock server
+    - name: Stop GCP emulator
       if: always()
       run: kill $(cat gcp-mock.pid) 2>/dev/null || true
 
@@ -356,14 +362,19 @@ integration-gcp:
         flags: integration-gcp
 ```
 
-**Coverage Impact**: GCP backend coverage increased from ~15% to 80.0% with mock server integration tests running in CI.
+**Coverage Impact**: GCP backend coverage increased from ~15% to 80.0% with emulator integration tests running in CI.
 
-**Why Build a Custom Mock?**: Unlike AWS (which has LocalStack), Google doesn't provide an official Secret Manager emulator. Our custom gRPC mock server:
-- Implements the official Secret Manager API (6 core methods)
-- Zero external dependencies beyond official GCP proto types
-- Designed for extraction as standalone project
-- Tested with real GCP SDK client
-- Fast execution (<1 second for full test suite)
+**About the GCP Secret Manager Emulator**: Unlike AWS (which has LocalStack), Google doesn't provide an official Secret Manager emulator. The [gcp-secret-manager-emulator](https://github.com/blackwell-systems/gcp-secret-manager-emulator) is a standalone gRPC implementation that:
+- Implements the official Secret Manager v1 API (core operations)
+- Has zero dependencies on vaultmux - completely standalone
+- Is published as a reusable Go package
+- Provides Docker images for both amd64 and arm64
+- Is tested with the real GCP SDK client
+- Executes tests in <1 second
+- Can be used by any project that needs GCP Secret Manager testing
+- Is actively maintained with 87% test coverage
+
+The emulator was extracted from vaultmux in v1.0.0-rc2 to make it available to the broader Go community.
 
 ## Coverage Goals
 
