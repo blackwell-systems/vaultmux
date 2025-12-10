@@ -7,7 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.0] - TBD
+## [1.0.0-rc1] - 2025-12-10
+
+**Release Candidate for v1.0 - API Stability Commitment**
+
+This release candidate marks vaultmux as production-ready with a stable API. The library supports 7 backends covering personal, enterprise, and cloud use cases with comprehensive test coverage and documentation.
+
+### API Stability
+
+v1.0 signifies commitment to semantic versioning with a stable public API:
+- No breaking changes to core interfaces (Backend, Session, Item)
+- Additive changes only (new backends, optional features)
+- Security fixes and bug fixes as patch releases
+- New functionality as minor releases
+
+### Documentation
+
+- **Roadmap Cleanup** - Removed implemented backends from planned section
+  - Windows Credential Manager, AWS Secrets Manager, GCP Secret Manager, and Azure Key Vault moved from roadmap to supported backends list
+  - Implementation Priority section removed (historical record preserved in git history)
+  - Focus on future enhancement items (HashiCorp Vault, KeePassXC, Keeper, Doppler)
+
+- **Architecture Updates** - Component diagrams expanded to include all backends
+  - Updated Component Architecture diagram with all 7 supported backends
+  - Added cloud provider backends (AWS, GCP, Azure) with SDK integration patterns
+  - Added Windows Credential Manager with PowerShell integration
+  - Clarified distinction between CLI-based, OS API, and SDK-based backends
+
+- **Improved Clarity** - Enhanced documentation for broader audience
+  - Generalized "Why Vaultmux?" section for wider appeal
+  - Updated coverpage version references
+  - Removed project-specific references for better reusability
+
+### Code Quality
+
+- **Linting Improvements** - Resolved all ineffectual assignment warnings
+  - Fixed pagination variable scope in AWS backend (nextToken moved to for-loop scope)
+  - Fixed pagination variable scope in GCP mock server (eliminated intermediate variables)
+  - Improved code clarity by using early returns and eliminating unused assignments
+  - All backends now pass golangci-lint with zero warnings
+
+### Status
+
+Current backend support:
+- CLI-based: Bitwarden, 1Password, pass
+- OS API: Windows Credential Manager
+- Cloud SDK: AWS Secrets Manager, Google Cloud Secret Manager, Azure Key Vault
+- Testing: Mock backend (100% coverage)
+
+Core test coverage: 97.8%
+
+## [0.4.0] - 2025-12-09
 
 ### Performance
 

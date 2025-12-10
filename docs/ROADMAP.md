@@ -1,12 +1,12 @@
 # Vaultmux Roadmap
 
-> **Current Status:** v0.3.0 - Production-ready with 7 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, Azure Key Vault)
+> **Current Status:** v1.0.0-rc1 - Stable API, production-ready with 7 backends (Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, Azure Key Vault)
 
 This document outlines planned backend integrations and major features for vaultmux.
 
 ---
 
-## Supported Backends (v0.3.0)
+## Supported Backends (v1.0.0-rc1)
 
 - **Bitwarden** - Open source, self-hostable (Vaultwarden)
 - **1Password** - Enterprise-grade with biometric auth
@@ -202,5 +202,5 @@ Have a backend you'd like to see supported? [Open an issue](https://github.com/b
 
 ---
 
-**Last Updated:** 2025-12-08
-**Current Version:** v0.3.3 (released)
+**Last Updated:** 2025-12-10
+**Current Version:** v1.0.0-rc1 (release candidate)
