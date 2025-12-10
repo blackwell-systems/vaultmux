@@ -245,7 +245,6 @@ Want to implement a backend? See [EXTENDING.md](EXTENDING.md) for implementation
 ## Non-Goals
 
 **We will NOT do:**
-- **Rust port** - Go works excellently for this I/O-bound use case. See analysis: vaultmux is network/CLI bound, not CPU bound. Go's mature SDKs (AWS, Azure) and goroutines are perfect. A Rust port would take 6+ months with no real performance benefit.
 - Browser extension password managers (no CLI available)
 - Deprecated/unmaintained tools
 - Platforms without programmatic access
