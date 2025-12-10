@@ -18,6 +18,70 @@ This document outlines planned backend integrations and major features for vault
 
 ---
 
+## Planned Features
+
+### v1.1.0 - Secret Rotation Automation (Q1 2026)
+
+**Priority: HIGH**
+
+- Rotation policies and schedules
+- Rotation engine (background service)
+- Provider plugins for databases, API keys, certificates
+- Rotation workflow: generate → update → distribute → verify → revoke
+- Configuration via `.vaultmux/rotation.yaml`
+
+**Estimated Effort:** 6-8 weeks
+
+### v1.2.0 - Web UI (Q2 2026)
+
+**Priority: HIGH**
+
+- Browser-based secret management
+- Multi-backend aggregated view
+- Search and filtering
+- Secret history timeline
+- Audit logging
+- Built with Go backend + Svelte frontend
+
+**Estimated Effort:** 8-10 weeks
+
+### v1.3.0 - Secret Scanning (Q2 2026)
+
+**Priority: MEDIUM**
+
+- Scan git history for leaked secrets
+- File system scanning
+- Pattern detection (AWS keys, API keys, etc.)
+- CI/CD integration
+- Remediation suggestions
+
+**Estimated Effort:** 4-6 weeks
+
+### v1.4.0 - Secret Synchronization (Q3 2026)
+
+**Priority: MEDIUM**
+
+- Sync secrets between vaults
+- One-way and bidirectional sync
+- Selective sync by prefix/tags
+- Continuous sync with change detection
+
+**Estimated Effort:** 5-7 weeks
+
+### v1.5.0 - Observability (Q3 2026)
+
+**Priority: MEDIUM**
+
+- Prometheus metrics endpoint
+- OpenTelemetry tracing
+- Structured logging
+- Health checks
+- Backend availability monitoring
+
+**Estimated Effort:** 3-4 weeks
+
+---
+
 ## Planned Backends
 
 ---
@@ -180,10 +244,12 @@ Want to implement a backend? See [EXTENDING.md](EXTENDING.md) for implementation
 
 ## Non-Goals
 
-**We will NOT support:**
+**We will NOT do:**
+- **Rust port** - Go works excellently for this I/O-bound use case. See analysis: vaultmux is network/CLI bound, not CPU bound. Go's mature SDKs (AWS, Azure) and goroutines are perfect. A Rust port would take 6+ months with no real performance benefit.
 - Browser extension password managers (no CLI available)
 - Deprecated/unmaintained tools
 - Platforms without programmatic access
+- Built-in vault replacement (we're an adapter, not a vault)
 
 **We WILL support:**
 - Any backend with a stable CLI or Go SDK
