@@ -184,11 +184,12 @@ jobs:
         with:
           go-version: '1.24'
 
-      - name: Build GCP mock server
+      - name: Install GCP Secret Manager emulator
         run: |
-          echo "Building GCP Secret Manager mock server..."
-          go build -o gcp-mock ./cmd/gcp-secret-manager-mock
-          echo "Built successfully"
+          echo "Installing GCP Secret Manager emulator..."
+          go install github.com/blackwell-systems/gcp-secret-manager-emulator/cmd/server@v0.1.0
+          mv ~/go/bin/server ./gcp-mock
+          echo "Installed successfully"
 
       - name: Start GCP mock server
         run: |

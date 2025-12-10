@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-rc2] - 2025-12-10
+
+**Release Candidate 2 - GCP Emulator Extraction**
+
+This release extracts the GCP Secret Manager mock server into a standalone, reusable package.
+
+### Refactoring
+
+- **GCP Emulator Extracted** - Mock server now available as standalone package
+  - Removed `internal/gcpmock` package (~500 lines)
+  - Removed `cmd/gcp-secret-manager-mock` binary
+  - Added dependency on `github.com/blackwell-systems/gcp-secret-manager-emulator@v0.1.0`
+  - CI workflow updated to install emulator from external package
+  - No changes to test behavior - all integration tests pass
+  - Benefits:
+    - Single source of truth for GCP Secret Manager emulator
+    - Emulator can be used by other projects
+    - Reduced maintenance burden on vaultmux
+    - Automatic bug fixes and features from upstream
+
+- **Codebase Simplification** - Focused on core backend functionality
+  - Vaultmux now focuses solely on backend implementations
+  - Testing infrastructure externalized for reusability
+  - Improved separation of concerns
+
+### Dependencies
+
+- Added: `github.com/blackwell-systems/gcp-secret-manager-emulator v0.1.0`
+
 ## [1.0.0-rc1] - 2025-12-10
 
 **Release Candidate for v1.0 - API Stability Commitment**
