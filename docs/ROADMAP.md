@@ -242,21 +242,6 @@ Want to implement a backend? See [EXTENDING.md](EXTENDING.md) for implementation
 
 ---
 
-## Non-Goals
-
-**We will NOT do:**
-- Browser extension password managers (no CLI available)
-- Deprecated/unmaintained tools
-- Platforms without programmatic access
-- Built-in vault replacement (we're an adapter, not a vault)
-
-**We WILL support:**
-- Any backend with a stable CLI or Go SDK
-- Backends with clear authentication patterns
-- Tools commonly used in development workflows
-
----
-
 ## Feedback
 
 Have a backend you'd like to see supported? [Open an issue](https://github.com/blackwell-systems/vaultmux/issues) with:
