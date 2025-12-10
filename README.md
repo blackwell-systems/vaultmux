@@ -352,6 +352,7 @@ var (
     ErrBackendNotInstalled = errors.New("backend CLI not installed")
     ErrBackendLocked       = errors.New("vault is locked")
     ErrPermissionDenied    = errors.New("permission denied")
+    ErrNotSupported        = errors.New("operation not supported")
 )
 ```
 
