@@ -23,53 +23,21 @@ Vaultmux is a Go library that provides a unified interface for interacting with 
 
 ## Table of Contents
 
-1. [Design Goals](#1-design-goals)
-2. [Architecture Overview](#2-architecture-overview)
-3. [Core Interfaces](#3-core-interfaces)
-4. [Authentication Flow](#4-authentication-flow)
-5. [Session Management](#5-session-management)
-6. [CRUD Operations](#6-crud-operations)
-7. [Backend Registration](#7-backend-registration)
-8. [Error Handling](#8-error-handling)
-9. [Testing Strategy](#9-testing-strategy)
-10. [Backend Comparison](#10-backend-comparison)
+1. [Architecture Overview](#1-architecture-overview)
+2. [Core Interfaces](#2-core-interfaces)
+3. [Authentication Flow](#3-authentication-flow)
+4. [Session Management](#4-session-management)
+5. [CRUD Operations](#5-crud-operations)
+6. [Backend Registration](#6-backend-registration)
+7. [Error Handling](#7-error-handling)
+8. [Testing Strategy](#8-testing-strategy)
+9. [Backend Comparison](#9-backend-comparison)
 
 ---
 
-## 1. Design Goals
+## 1. Architecture Overview
 
-### 1.1 Primary Goals
-
-| Goal | Description |
-|------|-------------|
-| **Unified API** | Single interface works with any backend |
-| **Minimal Dependencies** | Core has zero dependencies; backends add only what they need (CLIs or SDKs) |
-| **Context Support** | All operations accept `context.Context` for cancellation/timeout |
-| **Session Caching** | Avoid repeated authentication prompts |
-| **Testability** | Mock backend for unit testing |
-
-### 1.2 Non-Goals
-
-| Non-Goal | Rationale |
-|----------|-----------|
-| GUI/TUI | Library only; consumers build their own UI |
-| Backend installation | Users install `bw`, `op`, `pass` themselves |
-| Encryption | Delegated to backend implementations |
-| Key generation | Out of scope; use backend tools |
-
-### 1.3 Design Principles
-
-1. **Backends integrate natively** - CLI backends shell out to `bw`, `op`, `pass`; SDK backends use native clients (AWS SDK, Azure SDK)
-2. **Fail fast, fail clearly** - Explicit errors over silent failures
-3. **No global state** - All state lives in Backend/Session structs
-4. **Functional options** - Extensible configuration without breaking changes
-5. **Interface universality** - Same `Backend` interface works for CLI wrappers, OS APIs, and SDK clients
-
----
-
-## 2. Architecture Overview
-
-### 2.1 Package Structure
+### 1.1 Package Structure
 
 ```
 github.com/blackwell-systems/vaultmux/
@@ -114,7 +82,7 @@ github.com/blackwell-systems/vaultmux/
         └── exec.go        # Command execution helpers
 ```
 
-### 2.2 Component Architecture
+### 1.2 Component Architecture
 
 ```mermaid
 graph TB
@@ -133,6 +101,10 @@ graph TB
         BW[Bitwarden<br/>Backend]
         OP[1Password<br/>Backend]
         Pass[pass<br/>Backend]
+        WC[Windows<br/>Cred Mgr]
+        AWS[AWS Secrets<br/>Manager]
+        GCP[GCP Secret<br/>Manager]
+        Azure[Azure<br/>Key Vault]
         Mock[Mock<br/>Backend]
     end
 
@@ -140,6 +112,13 @@ graph TB
         BWCLI[bw<br/>Bitwarden CLI]
         OPCLI[op<br/>1Password CLI]
         PassCLI[pass + GPG]
+        WCCLI[Windows<br/>PowerShell]
+    end
+
+    subgraph CloudAPIs["Cloud APIs"]
+        AWSAPI[AWS SDK]
+        GCPAPI[GCP SDK]
+        AzureAPI[Azure SDK]
     end
 
     App -->|New Config| Factory
@@ -150,22 +129,33 @@ graph TB
     Backend -.->|implements| BW
     Backend -.->|implements| OP
     Backend -.->|implements| Pass
+    Backend -.->|implements| WC
+    Backend -.->|implements| AWS
+    Backend -.->|implements| GCP
+    Backend -.->|implements| Azure
     Backend -.->|implements| Mock
 
     BW -->|exec| BWCLI
     OP -->|exec| OPCLI
     Pass -->|exec| PassCLI
+    WC -->|exec| WCCLI
+
+    AWS -->|SDK| AWSAPI
+    GCP -->|SDK| GCPAPI
+    Azure -->|SDK| AzureAPI
 
     classDef coreStyle fill:#2d7dd2,stroke:#4a9eff,stroke-width:2px,color:#e0e0e0
     classDef backendStyle fill:#3a3a3a,stroke:#6eb5ff,stroke-width:1px,color:#e0e0e0
     classDef cliStyle fill:#1a1a1a,stroke:#4a9eff,stroke-width:1px,color:#e0e0e0
+    classDef cloudStyle fill:#1a3a1a,stroke:#4a9eff,stroke-width:1px,color:#e0e0e0
 
     class Factory,Backend,Session,Cache coreStyle
-    class BW,OP,Pass,Mock backendStyle
-    class BWCLI,OPCLI,PassCLI cliStyle
+    class BW,OP,Pass,WC,AWS,GCP,Azure,Mock backendStyle
+    class BWCLI,OPCLI,PassCLI,WCCLI cliStyle
+    class AWSAPI,GCPAPI,AzureAPI cloudStyle
 ```
 
-### 2.3 Data Flow
+### 1.3 Data Flow
 
 ```mermaid
 sequenceDiagram
@@ -206,9 +196,9 @@ sequenceDiagram
 
 ---
 
-## 3. Core Interfaces
+## 2. Core Interfaces
 
-### 3.1 Backend Interface
+### 2.1 Backend Interface
 
 ```go
 // Backend represents a secret storage backend.
@@ -243,7 +233,7 @@ type Backend interface {
 }
 ```
 
-### 3.2 Session Interface
+### 2.2 Session Interface
 
 ```go
 // Session represents an authenticated session.
@@ -262,7 +252,7 @@ type Session interface {
 }
 ```
 
-### 3.3 Item Structure
+### 2.3 Item Structure
 
 ```go
 // Item represents a vault item.
@@ -291,7 +281,7 @@ const (
 
 ---
 
-## 4. Authentication Flow
+## 3. Authentication Flow
 
 ```mermaid
 flowchart TD
@@ -330,7 +320,7 @@ flowchart TD
     style IsLocked fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
-### 4.1 Authentication States
+### 3.1 Authentication States
 
 | State | Description | CLI Check | Action |
 |-------|-------------|-----------|--------|
@@ -341,9 +331,9 @@ flowchart TD
 
 ---
 
-## 5. Session Management
+## 4. Session Management
 
-### 5.1 Session Caching Strategy
+### 4.1 Session Caching Strategy
 
 ```mermaid
 graph LR
@@ -371,7 +361,7 @@ graph LR
     style Token,Created,Expires,Backend fill:#1a1a1a,stroke:#4a9eff,color:#e0e0e0
 ```
 
-### 5.2 Cache Operations
+### 4.2 Cache Operations
 
 ```go
 // SessionCache handles session persistence to disk.
@@ -391,7 +381,7 @@ func (c *SessionCache) Save(token, backend string) error
 func (c *SessionCache) Clear() error
 ```
 
-### 5.3 Auto-Refresh Pattern
+### 4.3 Auto-Refresh Pattern
 
 ```mermaid
 sequenceDiagram
@@ -422,9 +412,9 @@ sequenceDiagram
 
 ---
 
-## 6. CRUD Operations
+## 5. CRUD Operations
 
-### 6.1 GetNotes Operation Flow
+### 5.1 GetNotes Operation Flow
 
 ```mermaid
 flowchart TD
@@ -458,7 +448,7 @@ flowchart TD
     style CheckError fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
-### 6.2 CreateItem Operation
+### 5.2 CreateItem Operation
 
 ```mermaid
 sequenceDiagram
@@ -485,9 +475,9 @@ sequenceDiagram
 
 ---
 
-## 7. Backend Registration
+## 6. Backend Registration
 
-### 7.1 Registration Pattern
+### 6.1 Registration Pattern
 
 ```mermaid
 graph TD
@@ -517,7 +507,7 @@ graph TD
     style Create fill:#2d7dd2,stroke:#4a9eff,color:#e0e0e0
 ```
 
-### 7.2 Example Backend Registration
+### 6.2 Example Backend Registration
 
 ```go
 // In backends/bitwarden/bitwarden.go
@@ -532,7 +522,7 @@ func init() {
 }
 ```
 
-### 7.3 Consumer Usage
+### 6.3 Consumer Usage
 
 ```go
 // Consumer application
@@ -551,9 +541,9 @@ func main() {
 
 ---
 
-## 8. Error Handling
+## 7. Error Handling
 
-### 8.1 Error Types
+### 7.1 Error Types
 
 ```go
 var (
@@ -567,7 +557,7 @@ var (
 )
 ```
 
-### 8.2 Error Wrapping
+### 7.2 Error Wrapping
 
 ```mermaid
 graph LR
@@ -602,9 +592,9 @@ if err != nil {
 
 ---
 
-## 9. Testing Strategy
+## 8. Testing Strategy
 
-### 9.1 Test Pyramid
+### 8.1 Test Pyramid
 
 ```mermaid
 graph TD
@@ -629,7 +619,7 @@ graph TD
     style Examples fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
-### 9.2 Mock Backend
+### 8.2 Mock Backend
 
 ```go
 // Mock backend for unit testing
@@ -650,9 +640,9 @@ func TestMyCode(t *testing.T) {
 
 ---
 
-## 10. Backend Comparison
+## 9. Backend Comparison
 
-### 10.1 Feature Matrix
+### 9.1 Feature Matrix
 
 | Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager | GCP Secret Manager | Azure Key Vault |
 |---------|-----------|-----------|------|------------------|---------------------|--------------------|--------------------|
@@ -670,7 +660,7 @@ func TestMyCode(t *testing.T) {
 | **Rotation** | Manual | Manual | Manual | Manual | Automatic (configurable) | Manual (future: automatic) | Manual (future: automatic) |
 | **Audit Logging** | Self-hosted only | Enterprise only | Via git log | No | Built-in (CloudTrail) | Built-in (Cloud Audit Logs) | Built-in (Azure Monitor) |
 
-### 10.2 Implementation Differences
+### 9.2 Implementation Differences
 
 ```mermaid
 graph TB
@@ -732,7 +722,7 @@ graph TB
     style BW,OP,P,WC,AWS,GCP,Azure fill:#3a3a3a,stroke:#6eb5ff,color:#e0e0e0
 ```
 
-### 10.3 When to Use Each Backend
+### 9.3 When to Use Each Backend
 
 **Bitwarden:**
 - Team/organization use
