@@ -373,19 +373,39 @@ graph TB
     GCPSDK --> GCPVAULT
     AZURESDK --> AZUREVAULT
 
-    style APP fill:#e1f5ff
-    style INTERFACE fill:#fff4e6
-    style CONFIG fill:#f3e5f5
-    style SESSION fill:#f3e5f5
+    %% Dark mode styling with high contrast
+    style APP fill:#1e3a5f,stroke:#4a9eff,stroke-width:3px,color:#fff
+    style INTERFACE fill:#5a3800,stroke:#ff9800,stroke-width:3px,color:#fff
+    style CONFIG fill:#3d1f4d,stroke:#9c27b0,stroke-width:2px,color:#fff
+    style SESSION fill:#3d1f4d,stroke:#9c27b0,stroke-width:2px,color:#fff
 
-    style BW fill:#fce4ec
-    style OP fill:#fce4ec
-    style PASS fill:#fce4ec
-    style WINCRED fill:#fce4ec
+    style BW fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
+    style OP fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
+    style PASS fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
+    style WINCRED fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
 
-    style AWS fill:#e8f5e9
-    style GCP fill:#e8f5e9
-    style AZURE fill:#e8f5e9
+    style AWS fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
+    style GCP fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
+    style AZURE fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
+
+    style BWCLI fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+    style OPCLI fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+    style PASSCLI fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+    style PS fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+
+    style AWSSDK fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+    style GCPSDK fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+    style AZURESDK fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+
+    style BWVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+    style OPVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+    style PASSVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+    style WINCREDVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+    style AWSVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+    style GCPVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+    style AZUREVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
+
+    linkStyle default stroke:#4a9eff,stroke-width:2px
 ```
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
