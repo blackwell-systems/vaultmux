@@ -289,123 +289,70 @@ VAULTMUX_TEST_1PASSWORD=1 go test -tags=integration ./...
 ## Architecture
 
 ```mermaid
-graph TB
-    subgraph "Your Application"
-        APP[Your Go Code]
-    end
+flowchart TB
+    APP["Your Application<br/>Your Go Code"]
 
-    subgraph "Vaultmux Unified API"
-        CONFIG[Config]
-        FACTORY[vaultmux.New]
-        INTERFACE[Backend Interface]
-        SESSION[Session Management]
+    CONFIG["Config"]
+    FACTORY["vaultmux.New()"]
+    INTERFACE["Backend Interface"]
 
-        CONFIG --> FACTORY
-        FACTORY --> INTERFACE
-        INTERFACE --> SESSION
-    end
+    BW["Bitwarden Backend"]
+    OP["1Password Backend"]
+    PASS["Pass Backend"]
+    WINCRED["WinCred Backend"]
+    AWS["AWS Secrets Manager Backend"]
+    GCP["GCP Secret Manager Backend"]
+    AZURE["Azure Key Vault Backend"]
 
-    subgraph "Backend Implementations"
-        subgraph "CLI Backends"
-            BW[Bitwarden Backend]
-            OP[1Password Backend]
-            PASS[Pass Backend]
-            WINCRED[WinCred Backend]
-        end
+    BWCLI["bw CLI"]
+    OPCLI["op CLI"]
+    PASSCLI["pass + gpg"]
+    PS["PowerShell"]
+    AWSSDK["aws-sdk-go-v2"]
+    GCPSDK["cloud.google.com/go"]
+    AZURESDK["azure-sdk-for-go"]
 
-        subgraph "SDK Backends"
-            AWS[AWS Secrets Manager]
-            GCP[GCP Secret Manager]
-            AZURE[Azure Key Vault]
-        end
-    end
+    BWVAULT[("Bitwarden<br/>Vault")]
+    OPVAULT[("1Password<br/>Vault")]
+    PASSVAULT[("~/.password-store")]
+    WINCREDVAULT[("Windows<br/>Credential Store")]
+    AWSVAULT[("AWS<br/>Secrets")]
+    GCPVAULT[("GCP<br/>Secrets")]
+    AZUREVAULT[("Azure<br/>Key Vault")]
 
-    subgraph "Integration Layer"
-        subgraph "Command-Line Tools"
-            BWCLI[bw CLI]
-            OPCLI[op CLI]
-            PASSCLI[pass + gpg]
-            PS[PowerShell]
-        end
+    APP -->|"vaultmux.New(config)"| FACTORY
+    FACTORY --> INTERFACE
 
-        subgraph "Cloud SDKs"
-            AWSSDK[aws-sdk-go-v2]
-            GCPSDK[cloud.google.com/go]
-            AZURESDK[azure-sdk-for-go]
-        end
-    end
+    INTERFACE -.->|CLI| BW
+    INTERFACE -.->|CLI| OP
+    INTERFACE -.->|CLI| PASS
+    INTERFACE -.->|CLI| WINCRED
+    INTERFACE -.->|SDK| AWS
+    INTERFACE -.->|SDK| GCP
+    INTERFACE -.->|SDK| AZURE
 
-    subgraph "Secret Storage"
-        BWVAULT[(Bitwarden Vault)]
-        OPVAULT[(1Password Vault)]
-        PASSVAULT[(~/.password-store)]
-        WINCREDVAULT[(Windows Cred Store)]
-        AWSVAULT[(AWS Secrets)]
-        GCPVAULT[(GCP Secrets)]
-        AZUREVAULT[(Azure Key Vault)]
-    end
+    BW -->|exec.Command| BWCLI --> BWVAULT
+    OP -->|exec.Command| OPCLI --> OPVAULT
+    PASS -->|exec.Command| PASSCLI --> PASSVAULT
+    WINCRED -->|exec.Command| PS --> WINCREDVAULT
 
-    APP --> |"backend, _ := vaultmux.New(config)"| FACTORY
-    APP --> |"backend.GetNotes(ctx, name, session)"| INTERFACE
+    AWS -->|native Go| AWSSDK --> AWSVAULT
+    GCP -->|native Go| GCPSDK --> GCPVAULT
+    AZURE -->|native Go| AZURESDK --> AZUREVAULT
 
-    INTERFACE -.-> BW
-    INTERFACE -.-> OP
-    INTERFACE -.-> PASS
-    INTERFACE -.-> WINCRED
-    INTERFACE -.-> AWS
-    INTERFACE -.-> GCP
-    INTERFACE -.-> AZURE
+    classDef appStyle fill:#1e3a5f,stroke:#4a9eff,stroke-width:3px,color:#fff
+    classDef apiStyle fill:#5a3800,stroke:#ff9800,stroke-width:3px,color:#fff
+    classDef cliBackend fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
+    classDef sdkBackend fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
+    classDef integration fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
+    classDef storage fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
 
-    BW --> |exec.Command| BWCLI
-    OP --> |exec.Command| OPCLI
-    PASS --> |exec.Command| PASSCLI
-    WINCRED --> |exec.Command| PS
-
-    AWS --> |native Go| AWSSDK
-    GCP --> |native Go| GCPSDK
-    AZURE --> |native Go| AZURESDK
-
-    BWCLI --> BWVAULT
-    OPCLI --> OPVAULT
-    PASSCLI --> PASSVAULT
-    PS --> WINCREDVAULT
-    AWSSDK --> AWSVAULT
-    GCPSDK --> GCPVAULT
-    AZURESDK --> AZUREVAULT
-
-    %% Dark mode styling with high contrast
-    style APP fill:#1e3a5f,stroke:#4a9eff,stroke-width:3px,color:#fff
-    style INTERFACE fill:#5a3800,stroke:#ff9800,stroke-width:3px,color:#fff
-    style CONFIG fill:#3d1f4d,stroke:#9c27b0,stroke-width:2px,color:#fff
-    style SESSION fill:#3d1f4d,stroke:#9c27b0,stroke-width:2px,color:#fff
-
-    style BW fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
-    style OP fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
-    style PASS fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
-    style WINCRED fill:#4a1942,stroke:#e91e63,stroke-width:2px,color:#fff
-
-    style AWS fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
-    style GCP fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
-    style AZURE fill:#1b4d1b,stroke:#4caf50,stroke-width:2px,color:#fff
-
-    style BWCLI fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-    style OPCLI fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-    style PASSCLI fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-    style PS fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-
-    style AWSSDK fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-    style GCPSDK fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-    style AZURESDK fill:#2d2d2d,stroke:#888,stroke-width:2px,color:#fff
-
-    style BWVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-    style OPVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-    style PASSVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-    style WINCREDVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-    style AWSVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-    style GCPVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-    style AZUREVAULT fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff
-
-    linkStyle default stroke:#4a9eff,stroke-width:2px
+    class APP appStyle
+    class FACTORY,INTERFACE apiStyle
+    class BW,OP,PASS,WINCRED cliBackend
+    class AWS,GCP,AZURE sdkBackend
+    class BWCLI,OPCLI,PASSCLI,PS,AWSSDK,GCPSDK,AZURESDK integration
+    class BWVAULT,OPVAULT,PASSVAULT,WINCREDVAULT,AWSVAULT,GCPVAULT,AZUREVAULT storage
 ```
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
