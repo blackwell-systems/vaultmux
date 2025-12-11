@@ -288,14 +288,114 @@ VAULTMUX_TEST_1PASSWORD=1 go test -tags=integration ./...
 
 ## Architecture
 
+```mermaid
+graph TB
+    subgraph "Your Application"
+        APP[Your Go Code]
+    end
+
+    subgraph "Vaultmux Unified API"
+        CONFIG[Config]
+        FACTORY[vaultmux.New]
+        INTERFACE[Backend Interface]
+        SESSION[Session Management]
+
+        CONFIG --> FACTORY
+        FACTORY --> INTERFACE
+        INTERFACE --> SESSION
+    end
+
+    subgraph "Backend Implementations"
+        subgraph "CLI Backends"
+            BW[Bitwarden Backend]
+            OP[1Password Backend]
+            PASS[Pass Backend]
+            WINCRED[WinCred Backend]
+        end
+
+        subgraph "SDK Backends"
+            AWS[AWS Secrets Manager]
+            GCP[GCP Secret Manager]
+            AZURE[Azure Key Vault]
+        end
+    end
+
+    subgraph "Integration Layer"
+        subgraph "Command-Line Tools"
+            BWCLI[bw CLI]
+            OPCLI[op CLI]
+            PASSCLI[pass + gpg]
+            PS[PowerShell]
+        end
+
+        subgraph "Cloud SDKs"
+            AWSSDK[aws-sdk-go-v2]
+            GCPSDK[cloud.google.com/go]
+            AZURESDK[azure-sdk-for-go]
+        end
+    end
+
+    subgraph "Secret Storage"
+        BWVAULT[(Bitwarden Vault)]
+        OPVAULT[(1Password Vault)]
+        PASSVAULT[(~/.password-store)]
+        WINCREDVAULT[(Windows Cred Store)]
+        AWSVAULT[(AWS Secrets)]
+        GCPVAULT[(GCP Secrets)]
+        AZUREVAULT[(Azure Key Vault)]
+    end
+
+    APP --> |"backend, _ := vaultmux.New(config)"| FACTORY
+    APP --> |"backend.GetNotes(ctx, name, session)"| INTERFACE
+
+    INTERFACE -.-> BW
+    INTERFACE -.-> OP
+    INTERFACE -.-> PASS
+    INTERFACE -.-> WINCRED
+    INTERFACE -.-> AWS
+    INTERFACE -.-> GCP
+    INTERFACE -.-> AZURE
+
+    BW --> |exec.Command| BWCLI
+    OP --> |exec.Command| OPCLI
+    PASS --> |exec.Command| PASSCLI
+    WINCRED --> |exec.Command| PS
+
+    AWS --> |native Go| AWSSDK
+    GCP --> |native Go| GCPSDK
+    AZURE --> |native Go| AZURESDK
+
+    BWCLI --> BWVAULT
+    OPCLI --> OPVAULT
+    PASSCLI --> PASSVAULT
+    PS --> WINCREDVAULT
+    AWSSDK --> AWSVAULT
+    GCPSDK --> GCPVAULT
+    AZURESDK --> AZUREVAULT
+
+    style APP fill:#e1f5ff
+    style INTERFACE fill:#fff4e6
+    style CONFIG fill:#f3e5f5
+    style SESSION fill:#f3e5f5
+
+    style BW fill:#fce4ec
+    style OP fill:#fce4ec
+    style PASS fill:#fce4ec
+    style WINCRED fill:#fce4ec
+
+    style AWS fill:#e8f5e9
+    style GCP fill:#e8f5e9
+    style AZURE fill:#e8f5e9
+```
+
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design documentation.
 
 **Key Design Principles:**
 
-1. **Backends integrate natively** - CLI backends shell out to `bw`, `op`, `pass`; SDK backends use native clients (AWS SDK v2)
-2. **Fail fast, fail clearly** - Explicit errors over silent failures
-3. **No global state** - All state lives in Backend/Session structs
-4. **Functional options** - Extensible configuration without breaking changes
+1. **Backends integrate natively**: CLI backends shell out to `bw`, `op`, `pass`; SDK backends use native clients (AWS SDK v2)
+2. **Fail fast, fail clearly**: Explicit errors over silent failures
+3. **No global state**: All state lives in Backend/Session structs
+4. **Functional options**: Extensible configuration without breaking changes
 
 ## API Reference
 
@@ -370,37 +470,6 @@ var (
 | **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) |
 | **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (OS feature) | No (AWS only) |
 | **Platform** | All | All | Unix | Windows | All |
-
-### When to Use Each
-
-**Bitwarden:**
-- Team/organization use
-- Cross-platform sync needed
-- Self-hosting preferred (Vaultwarden)
-
-**1Password:**
-- Enterprise environments
-- Biometric auth important
-- Watchtower/security features needed
-
-**pass:**
-- Unix power users
-- Git-based workflow
-- Minimal dependencies preferred
-- Full offline support needed
-
-**Windows Credential Manager:**
-- Windows-only deployments
-- No external CLI dependencies
-- OS-level authentication integration
-- Simple credential storage
-
-**AWS Secrets Manager:**
-- Applications running on AWS (EC2, ECS, Lambda)
-- Automatic secret rotation needed
-- IAM-based access control
-- Audit logging requirements
-- Multi-region redundancy
 
 ## Requirements
 
