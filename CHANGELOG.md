@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-rc3] - TBD
+
+**Release Candidate 3 - Documentation Quality Improvements**
+
+### Documentation
+
+- **Architecture Visualization**
+  - Added comprehensive mermaid architecture diagram to README
+  - Shows unified API, backend implementations, integration layer, and storage
+  - Dark mode styling for better readability
+  - Simplified layout for GitHub rendering compatibility
+
+- **README Improvements**
+  - Streamlined docs/README as navigation hub (reduced from 474 to 78 lines)
+  - Removed duplicate content between root and docs README
+  - Removed redundant "Related Projects" section
+  - Removed "When to Use Each" backend recommendations (comparison table is sufficient)
+  - Added missing ErrNotSupported to Common Errors documentation
+
+- **Roadmap Refinement**
+  - Added feature roadmap to ROADMAP.md
+  - Removed non-goals section for clarity
+  - Removed Rust port commentary (staying focused on Go implementation)
+
+- **Testing Documentation**
+  - Updated TESTING.md to reflect external GCP emulator package
+  - Clarified testing setup with standalone emulator
+
+### Maintenance
+
+- Established single source of truth for documentation
+- Root README: comprehensive getting started and API reference
+- docs/README: navigation portal to specialized guides
+- Eliminated documentation sprawl and duplication
+
 ## [1.0.0-rc2] - 2025-12-10
 
 **Release Candidate 2 - GCP Emulator Extraction**
