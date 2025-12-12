@@ -498,18 +498,3 @@ The **code** in this repository is licensed under the Apache License 2.0. The **
 ## Credits
 
 Created as part of the [blackwell-systems/dotfiles](https://github.com/blackwell-systems/dotfiles) project.
-
-## Related Projects
-
-### Supported Backends
-- [Bitwarden CLI](https://github.com/bitwarden/clients) - Open source password manager
-- [1Password CLI](https://developer.1password.com/docs/cli/) - Enterprise password management
-- [pass](https://www.passwordstore.org/) - Unix password store (GPG-based)
-- [Windows Credential Manager](https://docs.microsoft.com/en-us/windows/win32/secauthn/credential-manager) - Native Windows credential storage
-- [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) - Cloud-native secret management
-
-### Similar Projects
-- [HashiCorp Vault](https://www.vaultproject.io/) - Enterprise secret management platform
-- [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) - Azure secret management
-- [GCP Secret Manager](https://cloud.google.com/secret-manager) - Google Cloud secret management
-- [AWS SDK for Go](https://github.com/aws/aws-sdk-go-v2) - Official AWS SDK (used by vaultmux)
