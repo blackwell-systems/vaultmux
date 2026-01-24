@@ -21,7 +21,7 @@ Real-world scenarios where vaultmux solves concrete problems. Each use case incl
 
 ## Use Case 1: Multi-Cloud Deployments
 
-### Problem
+### The Scenario
 
 You're building a SaaS product. Customer A runs on AWS, Customer B runs on GCP, Customer C runs on Azure. Each customer wants secrets stored in their cloud provider's native secret management service.
 
@@ -79,7 +79,7 @@ func getSecret(customer string, name string) (string, error) {
 - Testing requires credentials for all three clouds
 - Code duplication (retry logic, error handling, logging)
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 import "github.com/blackwell-systems/vaultmux"
@@ -172,7 +172,7 @@ customerC := Customer{
 
 ## Use Case 2: Cross-Platform Applications
 
-### Problem
+### The Scenario
 
 You're building a desktop application that runs on Windows, macOS, and Linux. Each platform has its own native credential storage, and users expect your app to integrate with their OS.
 
@@ -220,7 +220,7 @@ func getSecret(name string) (string, error) {
 - Inconsistent user experience
 - Hard to maintain (three different APIs)
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 import (
@@ -324,7 +324,7 @@ Credentials stored in ~/.password-store (encrypted with GPG)
 
 ## Use Case 3: Team Flexibility / Open Source Projects
 
-### Problem
+### The Scenario
 
 You maintain an open source CLI tool. Contributors use different secret managers:
 - Alice uses Bitwarden (free, open source)
@@ -340,7 +340,7 @@ You pick one backend (e.g., Bitwarden) and force everyone to use it. This create
 - Cloud-first users prefer AWS/GCP integration
 - Result: Lower adoption, fewer contributors
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 // Let users choose their backend via config file
@@ -473,7 +473,7 @@ ghp_def456
 
 ## Use Case 4: Development → Staging → Production Workflow
 
-### Problem
+### The Scenario
 
 Different environments have different secret management requirements:
 
@@ -509,7 +509,7 @@ func getSecret(name string) (string, error) {
 - Different code paths for each environment
 - Can't test production secret flow locally
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 func getBackendConfig() vaultmux.Config {
@@ -658,7 +658,7 @@ Application deployed to production
 
 ## Use Case 5: Migration Between Secret Managers
 
-### Problem
+### The Scenario
 
 You're migrating from Bitwarden to AWS Secrets Manager. Reasons might include:
 - Enterprise requirement (centralized secret management)
@@ -667,7 +667,7 @@ You're migrating from Bitwarden to AWS Secrets Manager. Reasons might include:
 
 **Challenge:** Zero-downtime migration without rewriting application code.
 
-### Solution with Vaultmux: Phased Migration
+### Phased Migration Approach
 
 #### Phase 1: Dual-Read (Fallback Strategy)
 
@@ -846,7 +846,7 @@ Week 6:  Cleanup Bitwarden (Phase 5)
 
 ## Use Case 6: Testing Without Real Credentials
 
-### Problem
+### The Scenario
 
 Your application uses AWS Secrets Manager. You want to write unit tests, but:
 - Tests shouldn't require AWS credentials
@@ -870,7 +870,7 @@ func TestApplication(t *testing.T) {
 }
 ```
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 import (
@@ -1034,7 +1034,7 @@ jobs:
 
 ## Use Case 7: Vendor Neutrality for SaaS Products
 
-### Problem
+### The Scenario
 
 You're building a B2B SaaS product. Enterprise customers have strict requirements:
 - Customer A: Must use AWS (already has AWS infrastructure)
@@ -1049,7 +1049,7 @@ You pick one cloud provider (e.g., AWS) and force all customers onto AWS. This l
 - Azure-committed enterprises excluded (Microsoft agreements)
 - Regulated industries can't use cloud (on-prem required)
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 // Customer configuration stored in database
@@ -1212,7 +1212,7 @@ Year 5:   Azure-committed Fortune 500 → Add Azure support
 
 ## Use Case 8: Hybrid Cloud / On-Premises
 
-### Problem
+### The Scenario
 
 Your company has:
 - **Cloud workloads** (AWS, GCP) for public-facing services
@@ -1221,7 +1221,7 @@ Your company has:
 
 **Challenge:** Same application code runs in both environments.
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 func getBackendForEnvironment() vaultmux.Config {
@@ -1360,7 +1360,7 @@ func main() {
 
 ## Use Case 9: CLI Tools with User Choice
 
-### Problem
+### The Scenario
 
 You're building a CLI tool that needs to store credentials (API tokens, SSH keys, etc.). Users already have password managers set up - don't make them switch.
 
@@ -1368,7 +1368,7 @@ You're building a CLI tool that needs to store credentials (API tokens, SSH keys
 
 You hardcode one backend (e.g., "use Bitwarden") and alienate users who prefer pass or 1Password.
 
-### Solution with Vaultmux
+### With Vaultmux
 
 ```go
 // CLI command: mytool config set-backend <backend>
@@ -1545,7 +1545,7 @@ Password: [Retrieved from pass]
 
 ## Use Case 10: Disaster Recovery / Business Continuity
 
-### Problem
+### The Scenario
 
 Your application relies on AWS Secrets Manager (us-west-2). What happens if:
 - AWS region outage (us-west-2 unavailable)
@@ -1554,7 +1554,7 @@ Your application relies on AWS Secrets Manager (us-west-2). What happens if:
 
 **Without failover:** Application stops working entirely.
 
-### Solution with Vaultmux: Multi-Region Failover
+### Multi-Region Failover Implementation
 
 ```go
 type VaultConfig struct {

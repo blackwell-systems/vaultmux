@@ -36,9 +36,9 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 
 ## Why Vaultmux?
 
-**The Problem**: Applications that hardcode a single secret management backend lock users into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares—you end up writing the same logic multiple times with different method signatures, error handling, and authentication patterns.
+Applications that hardcode a single secret management backend lock users into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares—you end up writing the same logic multiple times with different method signatures, error handling, and authentication patterns.
 
-**The Solution**: Vaultmux provides a unified API that eliminates repetition. Write your secret management code once, and it works with any backend. Users choose their preferred system without you writing backend-specific code.
+Vaultmux provides a unified API that eliminates repetition. Write your secret management code once, and it works with any backend. Users choose their preferred system without you writing backend-specific code.
 
 ## Use Cases
 
