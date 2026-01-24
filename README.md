@@ -488,4 +488,4 @@ The **code** in this repository is licensed under the Apache License 2.0. The **
 
 ## Credits
 
-Created as part of the [blackwell-systems/dotfiles](https://github.com/blackwell-systems/dotfiles) project.
+Created as part of the [blackwell-systems/blackdot](https://github.com/blackwell-systems/blackdot) project.
