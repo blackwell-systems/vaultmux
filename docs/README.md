@@ -20,6 +20,12 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 
 ## Documentation
 
+### Getting Started
+
+- **[Use Cases](USE_CASES.md)** - Real-world scenarios with code examples (multi-cloud, migrations, testing)
+- **[Decision Guide](DECISION_GUIDE.md)** - Is vaultmux right for your project? When to use, when not to use
+- **[Quick Start](../README.md#quick-start)** - Installation and first steps
+
 ### Core Guides
 
 - **[Architecture](ARCHITECTURE.md)** - Design decisions, backend integration patterns, and internal structure
@@ -29,9 +35,9 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 
 ### Reference
 
+- **[API Documentation](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)** - Go package documentation
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 - **[Brand Guidelines](BRAND.md)** - Logo usage, trademark policy
-- **[API Documentation](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)** - Go package documentation
 
 ## Quick Links
 
@@ -65,8 +71,6 @@ defer backend.Close()
 // Get secret
 secret, _ := backend.GetNotes(ctx, "api-key", session)
 ```
-
-See the [main README](https://github.com/blackwell-systems/vaultmux#readme) for complete examples.
 
 ## Contributing
 
