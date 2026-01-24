@@ -36,6 +36,7 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 ### Reference
 
 - **[API Documentation](https://pkg.go.dev/github.com/blackwell-systems/vaultmux)** - Go package documentation
+- **[Backend Comparison](BACKEND_COMPARISON.md)** - Detailed feature comparison, pricing, performance benchmarks
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 - **[Brand Guidelines](BRAND.md)** - Logo usage, trademark policy
 

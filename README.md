@@ -13,6 +13,23 @@
 
 Vaultmux provides a unified interface for interacting with multiple secret management systems. Write your code once and support Bitwarden, 1Password, pass, Windows Credential Manager, AWS Secrets Manager, Google Cloud Secret Manager, and Azure Key Vault with the same API. Switch backends with zero code changes—perfect for multi-cloud deployments, cross-platform applications, and teams migrating between secret management solutions.
 
+## Why Vaultmux?
+
+Applications that hardcode a single secret management backend lock users into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares—you end up writing the same logic multiple times with different method signatures, error handling, and authentication patterns.
+
+Vaultmux provides a unified API that eliminates repetition. Write your secret management code once, and it works with any backend. Users choose their preferred system without you writing backend-specific code.
+
+### What Vaultmux Is NOT
+
+Setting clear expectations:
+
+- **Not a secrets sync system** - Vaultmux doesn't sync secrets between providers (use migration scripts for that)
+- **Not an encryption layer** - Vaultmux uses each backend's native encryption (doesn't add its own)
+- **Not a secrets management server** - Vaultmux is a client library, not a replacement for Vault/AWS Secrets Manager/GCP Secret Manager
+- **Not a control plane** - Vaultmux provides a unified client interface, not centralized management
+
+**What it is:** A portable abstraction layer that lets your application work with any vault without code changes.
+
 ## Features
 
 - **Unified API** - Single interface works with any backend
@@ -34,12 +51,6 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 | **Google Cloud Secret Manager** | SDK (cloud.google.com/go) | ADC auth, auto-versioning, labels | All |
 | **Azure Key Vault** | SDK (azure-sdk-for-go) | Azure AD auth, HSM-backed, RBAC | All |
 
-## Why Vaultmux?
-
-Applications that hardcode a single secret management backend lock users into one workflow. Supporting multiple backends with different APIs creates maintenance nightmares—you end up writing the same logic multiple times with different method signatures, error handling, and authentication patterns.
-
-Vaultmux provides a unified API that eliminates repetition. Write your secret management code once, and it works with any backend. Users choose their preferred system without you writing backend-specific code.
-
 ## Use Cases
 
 Vaultmux solves real problems in production environments:
@@ -57,6 +68,15 @@ Vaultmux solves real problems in production environments:
 
 **[🤔 Not sure if vaultmux is right for you? →](docs/DECISION_GUIDE.md)**
 
+## Design Philosophy
+
+Vaultmux follows these principles:
+
+- **Thin abstraction, not leaky abstraction** - Expose common operations, don't hide backend-specific behavior
+- **No magic global state** - All state lives in `Backend` and `Session` structs
+- **Prefer native tooling over re-implementing** - Use official CLIs and SDKs, don't rewrite vault logic
+- **Fail fast and explicitly** - Clear errors over silent failures, no guessing what went wrong
+
 ## Installation
 
 ```bash
@@ -65,6 +85,10 @@ go get github.com/blackwell-systems/vaultmux
 
 ## Quick Start
 
+### Environment-Based Backend Selection
+
+The killer feature: same code, different infrastructure.
+
 ```go
 package main
 
@@ -72,6 +96,7 @@ import (
     "context"
     "fmt"
     "log"
+    "os"
 
     "github.com/blackwell-systems/vaultmux"
 )
@@ -79,9 +104,20 @@ import (
 func main() {
     ctx := context.Background()
 
-    // Create backend (auto-detects ~/.password-store)
+    // Select backend based on environment
+    var backendType vaultmux.BackendType
+    switch os.Getenv("ENV") {
+    case "production":
+        backendType = vaultmux.BackendAWS  // AWS Secrets Manager in prod
+    case "development":
+        backendType = vaultmux.BackendPass  // pass locally (no cloud credentials)
+    default:
+        backendType = vaultmux.BackendBitwarden  // Bitwarden for staging/testing
+    }
+
+    // Create backend - same code for all environments
     backend, err := vaultmux.New(vaultmux.Config{
-        Backend: vaultmux.BackendPass,
+        Backend: backendType,
         Prefix:  "myapp",
     })
     if err != nil {
@@ -89,30 +125,43 @@ func main() {
     }
     defer backend.Close()
 
-    // Initialize (checks CLI availability)
+    // Initialize (checks CLI availability or SDK credentials)
     if err := backend.Init(ctx); err != nil {
         log.Fatal(err)
     }
 
-    // Authenticate (no-op for pass, interactive for Bitwarden/1Password)
+    // Authenticate - Session represents an authenticated handle to the backend
+    // CLI backends (pass, Bitwarden, 1Password) use short-lived tokens
+    // SDK backends (AWS, GCP, Azure) use implicit credentials (IAM, ADC, etc.)
     session, err := backend.Authenticate(ctx)
     if err != nil {
         log.Fatal(err)
     }
 
-    // Store a secret
+    // Store a secret - same API for all backends
     err = backend.CreateItem(ctx, "API-Key", "sk-secret123", session)
     if err != nil {
         log.Fatal(err)
     }
 
-    // Retrieve it
+    // Retrieve it - same API for all backends
     secret, err := backend.GetNotes(ctx, "API-Key", session)
     if err != nil {
         log.Fatal(err)
     }
     fmt.Println("Secret:", secret)
 }
+```
+
+**Run it:**
+```bash
+# Development (uses pass)
+ENV=development go run main.go
+
+# Production (uses AWS Secrets Manager)
+ENV=production go run main.go
+
+# No code changes, just environment variable
 ```
 
 ## Configuration
@@ -414,20 +463,7 @@ var (
 )
 ```
 
-## Backend Comparison
-
-| Feature | Bitwarden | 1Password | pass | Windows Cred Mgr | AWS Secrets Manager |
-|---------|-----------|-----------|------|------------------|---------------------|
-| **Integration** | CLI (`bw`) | CLI (`op`) | CLI (`pass`) | PowerShell | SDK (aws-sdk-go-v2) |
-| **Auth Method** | Email/password + 2FA | Account + biometrics | GPG key | Windows Hello/PIN | IAM credentials |
-| **Session Duration** | Until lock | 30 minutes | GPG agent TTL | OS-managed | Long-lived (IAM keys) |
-| **Sync** | `bw sync` | Automatic | `pass git pull/push` | N/A | Always synchronized |
-| **Offline Mode** | Yes (cached) | Limited | Yes (local files) | Yes (local only) | No (requires AWS API) |
-| **Folders** | Yes (folderId) | Vaults | Directories | Prefix-based | Prefix-based + tags |
-| **Sharing** | Organizations | Vaults | Git repos | Machine-local | IAM policies |
-| **Free Tier** | Yes | No | Yes (FOSS) | Yes (built-in) | No (~$0.40/secret/month) |
-| **Self-Host** | Yes (Vaultwarden) | No | Yes (any git host) | N/A (OS feature) | No (AWS only) |
-| **Platform** | All | All | Unix | Windows | All |
+**[📊 Detailed backend comparison →](docs/BACKEND_COMPARISON.md)** (features, pricing, performance, use case recommendations)
 
 ## Requirements
 
