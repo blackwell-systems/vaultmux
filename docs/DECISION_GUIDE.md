@@ -592,7 +592,7 @@ Before deciding, ask yourself:
 **Still unsure?**
 - Try vaultmux locally with `pass` or `bitwarden`
 - Read [Use Cases](USE_CASES.md) to see if your scenario matches
-- Check [Common Patterns](PATTERNS.md) for implementation examples
+- Check the [Quick Start](../README.md#quick-start) for implementation examples
 - Open a GitHub issue with your specific scenario
 
 ---
@@ -619,5 +619,5 @@ Before deciding, ask yourself:
 **Next steps:**
 1. [Browse use cases](USE_CASES.md) to find your scenario
 2. [Try the quick start](../README.md#quick-start) to see if vaultmux fits your workflow
-3. [Review migration guides](MIGRATIONS.md) if switching between backends
-4. [Check common patterns](PATTERNS.md) for implementation recipes
+3. [Read the backend comparison](BACKEND_COMPARISON.md) to understand trade-offs
+4. [Check the architecture guide](ARCHITECTURE.md) for design patterns

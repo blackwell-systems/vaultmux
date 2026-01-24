@@ -1760,7 +1760,7 @@ config := VaultConfig{
 1. **Identify your scenario** - Which use case matches your needs?
 2. **Try locally** - Install vaultmux and test with pass or Bitwarden
 3. **Read decision guide** - [Should I Use Vaultmux?](DECISION_GUIDE.md)
-4. **Check patterns** - [Common Patterns](PATTERNS.md) for implementation recipes
-5. **Plan migration** - [Migration Guides](MIGRATIONS.md) if switching backends
+4. **Check backend comparison** - [Backend Comparison](BACKEND_COMPARISON.md) for detailed feature analysis
+5. **Review architecture** - [Architecture Guide](ARCHITECTURE.md) for design patterns
 
 **Still have questions?** Open an issue on GitHub or see the [API Reference](../README.md#api-reference).
