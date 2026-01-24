@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-01-24
+
+### Changed
+
+- **Dual-licensed under MIT OR Apache 2.0** - Users can now choose either license
+  - Added LICENSE-MIT file
+  - Renamed LICENSE to LICENSE-APACHE
+  - Updated README.md with dual-license notice
+  - Added contribution clause for dual-licensing
+  - Updated license badge to show "MIT OR Apache-2.0"
+
 ## [1.0.0] - 2025-01-24
 
 **Production Release - Stable API**
@@ -542,7 +553,8 @@ Core test coverage: 97.8%
 - 58 tests passing
 - Cross-platform: Linux, macOS, Windows (WSL2)
 
-[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/blackwell-systems/vaultmux/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/blackwell-systems/vaultmux/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/blackwell-systems/vaultmux/compare/v0.4.0...v1.0.0
 [0.3.3]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/blackwell-systems/vaultmux/compare/v0.3.1...v0.3.2

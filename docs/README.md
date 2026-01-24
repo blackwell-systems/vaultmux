@@ -79,4 +79,4 @@ Contributions are welcome! Check the [Roadmap](ROADMAP.md) for planned features,
 
 ## License
 
-Apache License 2.0. See [LICENSE](https://github.com/blackwell-systems/vaultmux/blob/main/LICENSE).
+Dual-licensed under MIT OR Apache 2.0 (user's choice). See [LICENSE-MIT](https://github.com/blackwell-systems/vaultmux/blob/main/LICENSE-MIT) or [LICENSE-APACHE](https://github.com/blackwell-systems/vaultmux/blob/main/LICENSE-APACHE).

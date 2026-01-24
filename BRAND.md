@@ -18,7 +18,7 @@ The logo may not be:
 You **may**:
 - Use the name "Blackwell Systems" in text to refer to this project
 - Link to the official repository or documentation
-- Fork and modify the code under the Apache License 2.0
+- Fork and modify the code under MIT OR Apache 2.0 license
 
 ## Restricted Uses
 
@@ -30,9 +30,9 @@ You **may not** without prior written permission:
 
 ## Code vs. Brand
 
-The **code** in this repository is licensed under the Apache License 2.0—you're free to use, modify, and distribute it.
+The **code** in this repository is dual-licensed under MIT OR Apache 2.0 (your choice)—you're free to use, modify, and distribute it.
 
-The **brand** (name, logo, visual identity) is separately protected and not covered by the Apache License 2.0.
+The **brand** (name, logo, visual identity) is separately protected and not covered by the code licenses.
 
 ## Questions
 
