@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **README Restructure** - Improved user journey and positioning
+  - Moved "Why Vaultmux?" before Features (answer "why" before "what")
+  - Added "What Vaultmux Is NOT" section to prevent misconceptions
+  - Added Design Philosophy section with four core principles
+  - Replaced basic Quick Start with environment-based backend selection example
+  - Added Session terminology explanation (CLI tokens vs SDK credentials)
+  - Environment-based backend selection example shows practical dev/staging/prod workflow
+
+- **Backend Comparison Documentation** - Comprehensive reference guide
+  - Created docs/BACKEND_COMPARISON.md with detailed feature matrix
+  - Moved detailed backend comparison table from README to dedicated doc
+  - Added integration details (CLI vs SDK)
+  - Added authentication comparison (interactive vs non-interactive)
+  - Added session management patterns
+  - Added offline support analysis
+  - Added cost analysis with pricing examples
+  - Added security features (encryption, audit trails)
+  - Added use case recommendations per environment
+  - Added migration complexity guidance
+  - Added performance benchmarks
+  - Updated docs/README.md navigation to include new comparison guide
+
+### Clarity Improvements
+
+- Explicit "What Vaultmux Is NOT" section prevents wrong expectations
+  - Not a secrets sync system
+  - Not an encryption layer
+  - Not a secrets management server
+  - Not a control plane
+- Design Philosophy section establishes engineering principles
+  - Thin abstraction, not leaky abstraction
+  - No magic global state
+  - Prefer native tooling over re-implementing
+  - Fail fast and explicitly
+
 ## [1.0.0-rc3] - TBD
 
 **Release Candidate 3 - Documentation Quality Improvements**
