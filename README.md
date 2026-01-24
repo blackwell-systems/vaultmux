@@ -40,31 +40,22 @@ Vaultmux provides a unified interface for interacting with multiple secret manag
 
 **The Solution**: Vaultmux provides a unified API that eliminates repetition. Write your secret management code once, and it works with any backend. Users choose their preferred system without you writing backend-specific code.
 
-### Common Use Cases
+## Use Cases
 
-**Multi-Cloud Deployments**
-- Deploy to AWS, GCP, and Azure without rewriting secret access logic
-- Switch between AWS Secrets Manager, Google Cloud Secret Manager, and Azure Key Vault with a config change
+Vaultmux solves real problems in production environments:
 
-**Cross-Platform Applications**
-- Support Windows Credential Manager on Windows, pass on Linux, and 1Password on macOS
-- One codebase works everywhere
+- **Multi-cloud deployments** - Support AWS, GCP, Azure without code duplication
+- **Cross-platform applications** - Native credential stores on Windows/macOS/Linux
+- **Team flexibility** - Open source projects where contributors use different vaults
+- **Development workflows** - `pass` locally, AWS Secrets Manager in production
+- **Zero-downtime migrations** - Move from Bitwarden to AWS with phased rollout
+- **Testing** - Mock backend for fast unit tests without real credentials
+- **Vendor neutrality** - B2B SaaS where customers choose their cloud provider
+- **Disaster recovery** - Multi-region failover when primary vault unavailable
 
-**Team Flexibility**
-- Open source projects where contributors use different secret managers
-- Enterprise environments with mixed tooling (some teams on 1Password, others on HashiCorp Vault)
-- Migration scenarios (moving from Bitwarden to AWS Secrets Manager)
+**[📚 See detailed use cases with code examples →](docs/USE_CASES.md)**
 
-**Development Workflows**
-- Use `pass` locally for development, AWS Secrets Manager in production
-- Test with mock backend, deploy with real cloud provider
-- No code changes required—just configuration
-
-```go
-// Same code works with pass, Bitwarden, 1Password, AWS, GCP, Azure, etc.
-backend, _ := vaultmux.New(config)
-secret, _ := backend.GetNotes(ctx, "api-key", session)
-```
+**[🤔 Not sure if vaultmux is right for you? →](docs/DECISION_GUIDE.md)**
 
 ## Installation
 
