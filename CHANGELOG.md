@@ -22,7 +22,25 @@ v1.0.0 signifies:
 - New features as minor releases (1.x.0)
 - Breaking changes only in major releases (2.0.0+)
 
-### Documentation
+### 📦 Supported Backends (7)
+
+**CLI-based backends:**
+- Bitwarden - `bw` CLI integration with session tokens, folders, sync
+- 1Password - `op` CLI integration with session tokens, vaults, auto-sync
+- pass - Unix password manager with GPG encryption, git-based sync, directories
+
+**OS API backends:**
+- Windows Credential Manager - PowerShell integration with Windows Hello, OS-level auth
+
+**Cloud SDK backends:**
+- AWS Secrets Manager - `aws-sdk-go-v2` native integration with IAM auth, versioning, rotation
+- Google Cloud Secret Manager - `cloud.google.com/go` native integration with ADC auth, auto-versioning, labels
+- Azure Key Vault - `azure-sdk-for-go` native integration with Azure AD auth, HSM-backed, RBAC
+
+**Testing backend:**
+- Mock - In-memory backend for unit testing (100% coverage, no external dependencies)
+
+### 📚 Documentation
 
 - **README Restructure** - Improved user journey and positioning
   - Moved "Why Vaultmux?" before Features (answer "why" before "what")
@@ -64,15 +82,8 @@ v1.0.0 signifies:
   - Prefer native tooling over re-implementing
   - Fail fast and explicitly
 
-### Status
+### Test Coverage
 
-**Supported Backends (7):**
-- CLI-based: Bitwarden, 1Password, pass
-- OS API: Windows Credential Manager
-- Cloud SDK: AWS Secrets Manager, Google Cloud Secret Manager, Azure Key Vault
-- Testing: Mock backend
-
-**Test Coverage:**
 - Core package: 98.5%
 - Overall project: 97.8%
 - All integration tests passing
