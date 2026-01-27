@@ -25,7 +25,7 @@ Setting clear expectations:
 
 - **Not a secrets sync system** - Vaultmux doesn't sync secrets between providers (use migration scripts for that)
 - **Not an encryption layer** - Vaultmux uses each backend's native encryption (doesn't add its own)
-- **Not a secrets management server** - Vaultmux is a client library, not a replacement for Vault/AWS Secrets Manager/GCP Secret Manager
+- **Not a secrets management server** - Vaultmux is a Go library. For language-agnostic HTTP access in Kubernetes, see [vaultmux-server](https://github.com/blackwell-systems/vaultmux-server)
 - **Not a control plane** - Vaultmux provides a unified client interface, not centralized management
 
 **What it is:** A portable abstraction layer that lets your application work with any vault without code changes.
@@ -527,6 +527,11 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 ## Brand
 
 The **code** in this repository is dual-licensed (MIT OR Apache 2.0). The **Blackwell Systems™** name and logo are protected trademarks. See [BRAND.md](BRAND.md) for usage guidelines.
+
+## Related Projects
+
+- **[vaultmux-server](https://github.com/blackwell-systems/vaultmux-server)** - HTTP API wrapper for polyglot Kubernetes environments. Deploy as sidecar or shared service for language-agnostic secret access (Python, Node.js, Rust, etc.)
+- **[vaultmux-rs](https://github.com/blackwell-systems/vaultmux-rs)** - Rust port with native AWS/GCP/Azure SDK integration
 
 ## Credits
 
